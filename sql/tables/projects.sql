@@ -1,0 +1,8 @@
+CREATE TABLE Projects (
+	ID		BIGINT,
+	Owner		VARCHAR(255),
+	Name		VARCHAR(255),
+	CreateAt	TIMESTAMP,
+	PRIMARY KEY (ID),
+	FOREIGN KEY (Owner) REFERENCES Users(Username)
+);

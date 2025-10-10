@@ -1,0 +1,10 @@
+CREATE TABLE Aliases (
+	ID		BIGINT,
+	Username	VARCHAR(255),
+	ProjectID	BIGINT,
+	Alias		VARCHAR(255),
+	FullName	VARCHAR(255),
+	PRIMARY KEY(ID),
+	FOREIGN KEY(Username) REFERENCES Users(Username),
+	FOREIGN KEY(ProjectID) REFERENCES Projects(ID)
+);

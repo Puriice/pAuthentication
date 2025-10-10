@@ -1,0 +1,8 @@
+CREATE TABLE Settings (
+	ProjectID	BIGINT,
+	RedirectURL	VARCHAR(255),
+	Credential	VARCHAR(255),
+	AllowAlias	BOOLEAN DEFAULT TRUE,
+	PRIMARY KEY(ProjectID),
+	FOREIGN KEY(ProjectID) REFERENCES Projects(ID)
+);

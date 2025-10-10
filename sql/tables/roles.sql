@@ -1,0 +1,8 @@
+CREATE TABLE Roles (
+	ID		BIGINT,
+	ProjectID	BIGINT,
+	Name		VARCHAR(255),
+	PriorityOrder	INT,
+	PRIMARY KEY(ID),
+	FOREIGN KEY(ProjectID) REFERENCES Projects(ID)
+);
