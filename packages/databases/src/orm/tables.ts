@@ -9,14 +9,22 @@ type Table<D extends TableDefinition> = {
 
 type Tables<D extends TableDefinition> = (Table<D>)[];
 
+type ColumnNames<D extends TableDefinition> = { [definition in keyof D['columns']]: D['columns'][definition]['name'] }[keyof D['columns']]
+
 type ReducedColumns<D extends TableDefinition> = [
 	(keyof D['columns'])[],
-	{ [definition in keyof D['columns']]: D['columns'][definition]['name'] }[keyof D['columns']][]
+	ColumnNames<D>[]
 ]
 
 type SelectQueryReturn<D extends TableDefinition> = { [definition in keyof D['columns']]: D['columns'][definition]['type'] }[keyof D['columns']][]
 
-function createQueryObject<D extends TableDefinition>(table: D): (where?: string) => Promise<Tables<D>> {
+interface QueryObject<D extends TableDefinition> {
+	(where?: string): Promise<Tables<D>>
+	definition: TableDefinition;
+	insert: (values: Tables<D>, ...columns: ColumnNames<D>[]) => Promise<void>
+}
+
+function createQueryObject<D extends TableDefinition>(table: D): QueryObject<D> {
 	const entries = Object.entries(table.columns);
 	const [keys, columns]: ReducedColumns<D> = entries.reduce((prev, [key, value]) => {
 		prev[0].push(key)
@@ -25,7 +33,7 @@ function createQueryObject<D extends TableDefinition>(table: D): (where?: string
 		return prev;
 	}, [[], []] as ReducedColumns<D>)
 
-	return async (where?: string) => {
+	const query: QueryObject<D> = async (where?: string) => {
 		const whereFilter = sql`${where}`
 		const returns: SelectQueryReturn<D>[] = where
 			? await connection`SELECT ${sql.unsafe(columns.join(', '))} FROM ${sql(table.name)} `.values()
@@ -38,6 +46,14 @@ function createQueryObject<D extends TableDefinition>(table: D): (where?: string
 			}, {} as Table<D>)
 		})
 	}
+
+	query.definition = table;
+
+	query.insert = async function (tables, ...columns) {
+		const values = await sql`INSERT INTO ${sql(this.definition.name)} ${sql(tables, ...columns)}`
+	}
+
+	return query;
 }
 
 export const users = createQueryObject(usersTable)
