@@ -21,7 +21,7 @@ type SelectQueryReturn<D extends TableDefinition> = { [definition in keyof D['co
 interface QueryObject<D extends TableDefinition> {
 	(where?: string): Promise<Tables<D>>
 	definition: TableDefinition;
-	insert: (values: Tables<D>, ...columns: ColumnNames<D>[]) => Promise<void>
+	insert: (values: Table<D>, ...columns: ColumnNames<D>[]) => Promise<void>
 }
 
 function createQueryObject<D extends TableDefinition>(table: D): QueryObject<D> {
@@ -49,8 +49,18 @@ function createQueryObject<D extends TableDefinition>(table: D): QueryObject<D> 
 
 	query.definition = table;
 
-	query.insert = async function (tables, ...columns) {
-		const values = await sql`INSERT INTO ${sql(this.definition.name)} ${sql(tables, ...columns)}`
+	query.insert = async function (table: Table<D>, ...columns) {
+		const insertValue = Object.entries(table).reduce((prev, [key, value]) => {
+			if (value instanceof Date) {
+				value = value.toISOString().slice(0, 10)
+			}
+
+			prev[key] = value;
+
+			return prev;
+		}, {} as Record<string, unknown>)
+
+		await sql`INSERT INTO ${sql(this.definition.name)} ${sql(insertValue, ...columns)}`
 	}
 
 	return query;
