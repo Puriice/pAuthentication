@@ -19,7 +19,7 @@ type ReducedColumns<D extends TableDefinition> = [
 type SelectQueryReturn<D extends TableDefinition> = { [definition in keyof D['columns']]: D['columns'][definition]['type'] }[keyof D['columns']][]
 
 interface QueryObject<D extends TableDefinition> {
-	(where?: string): Promise<Tables<D>>
+	(): Promise<Tables<D>>
 	definition: TableDefinition;
 	insert: (values: Table<D>, ...columns: ColumnNames<D>[]) => Promise<void>
 }
@@ -33,11 +33,8 @@ function createQueryObject<D extends TableDefinition>(table: D): QueryObject<D> 
 		return prev;
 	}, [[], []] as ReducedColumns<D>)
 
-	const query: QueryObject<D> = async (where?: string) => {
-		const whereFilter = sql`${where}`
-		const returns: SelectQueryReturn<D>[] = where
-			? await connection`SELECT ${sql.unsafe(columns.join(', '))} FROM ${sql(table.name)} `.values()
-			: await connection`SELECT ${sql.unsafe(columns.join(', '))} FROM ${sql(table.name)} WHERE ${whereFilter}`.values()
+	const query: QueryObject<D> = async () => {
+		const returns: SelectQueryReturn<D>[] = await connection`SELECT ${sql.unsafe(columns.join(', '))} FROM ${sql(table.name)} `.values()
 
 		return returns.map(values => {
 			return values.reduce((prev, curr, i) => {
