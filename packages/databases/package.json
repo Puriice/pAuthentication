@@ -1,13 +1,8 @@
 {
-	"name": "pauthentication",
-	"module": "index.ts",
+	"name": "databases",
+	"module": "src/index.ts",
 	"type": "module",
 	"private": true,
-	"workspaces": [
-		"shared/*",
-		"packages/*",
-		"apps/*"
-	],
 	"devDependencies": {
 		"@types/bun": "latest"
 	},
