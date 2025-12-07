@@ -1,148 +1,286 @@
-export interface TableDefinition {
-	name: string;
-	columns: Record<string, string>
-	linkedTables?: Record<string, TableDefinition>
+import type { TableDefinition } from "../../types";
+
+const ReturnType = {
+	string: '',
+	number: 0,
+	boolean: true,
+	date: new Date(),
+	timestamp: new Date()
 }
 
-
-export const users = {
+export const usersTable = {
 	name: 'Users',
 	columns: {
-		username: 'Username',
-		password: 'Password',
-		firstname: 'Firstname',
-		lastname: 'Lastname',
-		birthday: 'Birthday',
+		username: {
+			name: 'Username',
+			type: ReturnType.string
+		},
+		password: {
+			name: 'Password',
+			type: ReturnType.string
+		},
+		firstname: {
+			name: 'Firstname',
+			type: ReturnType.string
+		},
+		lastname: {
+			name: 'Lastname',
+			type: ReturnType.string
+		},
+		birthday: {
+			name: 'Birthday',
+			type: ReturnType.date
+		},
 	}
 } as const satisfies TableDefinition;
 
-export const emails = {
+export const emailsTable = {
 	name: 'Emails',
 	columns: {
-		username: 'Username',
-		order: 'Order',
-		email: 'Email'
+		username: {
+			name: 'Username',
+			type: ReturnType.string
+		},
+		order: {
+			name: 'Order',
+			type: ReturnType.number
+		},
+		email: {
+			name: 'Email',
+			type: ReturnType.string
+		}
 	},
 	linkedTables: {
-		users
+		users: usersTable
 	}
 } as const satisfies TableDefinition
 
-export const phones = {
+export const phonesTable = {
 	name: 'Phones',
 	columns: {
-		username: 'Username',
-		order: 'Order',
-		email: 'Number'
+		username: {
+			name: 'Username',
+			type: ReturnType.string
+		},
+		order: {
+			name: 'Order',
+			type: ReturnType.number
+		},
+		number: {
+			name: 'Number',
+			type: ReturnType.string
+		}
 	},
 	linkedTables: {
-		users
+		users: usersTable
 	}
 } as const satisfies TableDefinition
 
-export const projects = {
+export const projectsTable = {
 	name: 'Projects',
 	columns: {
-		id: 'ID',
-		owner: 'Owner',
-		name: 'Name',
-		createAt: 'CreateAt',
+		id: {
+			name: 'ID',
+			type: ReturnType.number
+		},
+		owner: {
+			name: 'Owner',
+			type: ReturnType.string
+		},
+		name: {
+			name: 'Name',
+			type: ReturnType.string
+		},
+		createAt: {
+			name: 'CreateAt',
+			type: ReturnType.timestamp
+		},
 	},
 	linkedTables: {
-		users
+		users: usersTable
 	}
 } as const satisfies TableDefinition
 
-export const projectSettings = {
+export const projectSettingsTable = {
 	name: 'Settings',
 	columns: {
-		id: 'ProjectID',
-		redirectURL: 'RedirectURL',
-		credential: 'Credential',
-		allowAlias: 'AllowAlias'
+		id: {
+			name: 'ProjectID',
+			type: ReturnType.number
+		},
+		redirectURL: {
+			name: 'RedirectURL',
+			type: ReturnType.string
+		},
+		credential: {
+			name: 'Credential',
+			type: ReturnType.string
+		},
+		allowAlias: {
+			name: 'AllowAlias',
+			type: ReturnType.boolean
+		}
 	},
 	linkedTables: {
-		projects
+		projects: projectsTable
 	}
 } as const satisfies TableDefinition
 
-export const roles = {
+export const rolesTable = {
 	name: 'Roles',
 	columns: {
-		id: 'ID',
-		projectID: 'ProjectID',
-		name: 'Name',
-		order: 'Order'
+		id: {
+			name: 'ID',
+			type: ReturnType.number
+		},
+		projectID: {
+			name: 'ProjectID',
+			type: ReturnType.number
+		},
+		name: {
+			name: 'Name',
+			type: ReturnType.string
+		},
+		order: {
+			name: 'Order',
+			type: ReturnType.number
+		}
 	},
 	linkedTables: {
-		projects
+		projects: projectsTable
 	}
 } as const satisfies TableDefinition
 
-export const privileges = {
+export const privilegesTable = {
 	name: 'Privileges',
 	columns: {
-		id: 'ID',
-		projectID: 'ProjectID',
-		name: 'Name',
-		description: 'Description',
-		group: 'Group',
-		order: 'Order'
+		id: {
+			name: 'ID',
+			type: ReturnType.number
+		},
+		projectID: {
+			name: 'ProjectID',
+			type: ReturnType.number
+		},
+		name: {
+			name: 'Name',
+			type: ReturnType.string
+		},
+		description: {
+			name: 'Description',
+			type: ReturnType.string
+		},
+		group: {
+			name: 'Group',
+			type: ReturnType.string
+		},
+		order: {
+			name: 'Order',
+			type: ReturnType.number
+		}
 	},
 	linkedTables: {
-		projects
+		projects: projectsTable
 	}
 } as const satisfies TableDefinition
 
-export const allows = {
+export const allowsTable = {
 	name: 'Allows',
 	columns: {
-		roleID: 'RoleID',
-		privilegeID: 'PrivilegeID',
+		roleID: {
+			name: 'RoleID',
+			type: ReturnType.number
+		},
+		privilegeID: {
+			name: 'PrivilegeID',
+			type: ReturnType.number
+		},
 	},
 	linkedTables: {
-		roles,
-		privileges
+		roles: rolesTable,
+		privileges: privilegesTable
 	}
 } as const satisfies TableDefinition
 
-export const members = {
+export const membersTable = {
 	name: 'Members',
 	columns: {
-		username: 'Username',
-		projectID: 'ProjectID',
-		roleID: 'RoleID'
+		username: {
+			name: 'Username',
+			type: ReturnType.string
+		},
+		projectID: {
+			name: 'ProjectID',
+			type: ReturnType.number
+		},
+		roleID: {
+			name: 'RoleID',
+			type: ReturnType.number
+		}
 	},
 	linkedTables: {
-		users,
-		projects,
-		roles
+		users: usersTable,
+		projects: projectsTable,
+		roles: rolesTable
 	}
 } as const satisfies TableDefinition
 
-export const aliases = {
+export const aliasesTable = {
 	name: 'Aliases',
 	columns: {
-		id: 'ID',
-		username: 'Username',
-		projectID: 'ProjectID',
-		alias: 'Alias',
-		fullname: 'FullName'
+		id: {
+			name: 'ID',
+			type: ReturnType.number
+		},
+		username: {
+			name: 'Username',
+			type: ReturnType.string
+		},
+		projectID: {
+			name: 'ProjectID',
+			type: ReturnType.number
+		},
+		alias: {
+			name: 'Alias',
+			type: ReturnType.string
+		},
+		fullname: {
+			name: 'FullName',
+			type: ReturnType.string
+		}
 	},
 	linkedTables: {
-		users,
-		projects
+		users: usersTable,
+		projects: projectsTable
 	}
 } as const satisfies TableDefinition
 
-export const keys = {
+export const keysTable = {
 	name: 'API Keys',
 	columns: {
-		token: 'Token',
-		projectID: 'ProjectID',
-		requester: 'Requester',
-		roleID: 'RoleID',
-		createAt: 'CreateAt',
-		TTL: 'TTL'
+		token: {
+			name: 'Token',
+			type: ReturnType.string
+		},
+		projectID: {
+			name: 'ProjectID',
+			type: ReturnType.number
+		},
+		requester: {
+			name: 'Requester',
+			type: ReturnType.string
+		},
+		roleID: {
+			name: 'RoleID',
+			type: ReturnType.number
+		},
+		createAt: {
+			name: 'CreateAt',
+			type: ReturnType.timestamp
+		},
+		TTL: {
+			name: 'TTL',
+			type: ReturnType.number
+		}
 	}
 } as const satisfies TableDefinition
