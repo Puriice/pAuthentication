@@ -21,6 +21,7 @@ type SelectQueryReturn<D extends TableDefinition> = { [definition in keyof D['co
 interface QueryObject<D extends TableDefinition> {
 	(): Promise<Tables<D>>
 	definition: TableDefinition;
+	count: () => Promise<number>;
 	insert: (values: Table<D>, ...columns: ColumnNames<D>[]) => Promise<void>
 }
 
@@ -45,6 +46,12 @@ function createQueryObject<D extends TableDefinition>(table: D): QueryObject<D> 
 	}
 
 	query.definition = table;
+
+	query.count = async function () {
+		const [[count]]: [[string]] = await sql`SELECT COUNT(*) FROM ${sql(this.definition.name)}`.values()
+
+		return Number(count);
+	}
 
 	query.insert = async function (table: Table<D>, ...columns) {
 		const insertValue = Object.entries(table).reduce((prev, [key, value]) => {
