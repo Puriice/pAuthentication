@@ -8,7 +8,7 @@
         "jsx": "react-jsx",
         "allowJs": true,
         "rootDir": "src",
-        "typeRoots": ["./types"],
+        "typeRoots": ["types"],
 
         // Bundler mode
         "moduleResolution": "bundler",
@@ -26,5 +26,6 @@
         "noUnusedLocals": false,
         "noUnusedParameters": false,
         "noPropertyAccessFromIndexSignature": false
-    }
+    },
+    "exclude": ["tests"]
 }

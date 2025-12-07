@@ -26,7 +26,7 @@ function createQueryObject<D extends TableDefinition>(table: D): (where?: string
 	}, [[], []] as ReducedColumns<D>)
 
 	return async (where?: string) => {
-		const returns: SelectQueryReturn<D>[] = await connection`SELECT ${sql(values)} FROM ${sql(table.name)} ${where ? `WHERE ${sql(where)}` : sql}`
+		const returns: SelectQueryReturn<D>[] = await connection`SELECT ${values.join(', ')} FROM ${sql(table.name)} ${where ? `WHERE ${sql(where)}` : sql}`
 
 		return returns.map(values => {
 			return values.reduce((prev, curr, i) => {
