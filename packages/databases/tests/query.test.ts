@@ -6,3 +6,9 @@ test('Query All users', async () => {
 
 	expect(result).toBeArray();
 })
+
+test('Query with filter', async () => {
+	const result = await users('username = "test1"')
+
+	expect(result[0]?.username).toBe('test1')
+})
