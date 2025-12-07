@@ -1,4 +1,4 @@
-import { sql } from "bun";
+import { SQL, sql } from "bun";
 import { connection } from "..";
 import type { TableDefinition } from "../../types";
 import { aliasesTable, allowsTable, emailsTable, keysTable, membersTable, phonesTable, privilegesTable, projectSettingsTable, projectsTable, rolesTable, usersTable } from "../tables";
@@ -18,7 +18,7 @@ type SelectQueryReturn<D extends TableDefinition> = { [definition in keyof D['co
 
 function createQueryObject<D extends TableDefinition>(table: D): (where?: string) => Promise<Tables<D>> {
 	const entries = Object.entries(table.columns);
-	const [keys, values]: ReducedColumns<D> = entries.reduce((prev, [key, value]) => {
+	const [keys, columns]: ReducedColumns<D> = entries.reduce((prev, [key, value]) => {
 		prev[0].push(key)
 		prev[1].push(value.name)
 
@@ -26,7 +26,7 @@ function createQueryObject<D extends TableDefinition>(table: D): (where?: string
 	}, [[], []] as ReducedColumns<D>)
 
 	return async (where?: string) => {
-		const returns: SelectQueryReturn<D>[] = await connection`SELECT ${values.join(', ')} FROM ${sql(table.name)} ${where ? `WHERE ${sql(where)}` : sql}`
+		const returns: SelectQueryReturn<D>[] = await connection`SELECT ${sql.unsafe(columns.join(', '))} FROM ${sql(table.name)} ${where ? `WHERE ${sql`${where}`}` : sql``} `.values()
 
 		return returns.map(values => {
 			return values.reduce((prev, curr, i) => {
@@ -37,7 +37,7 @@ function createQueryObject<D extends TableDefinition>(table: D): (where?: string
 	}
 }
 
-export const user = createQueryObject(usersTable)
+export const users = createQueryObject(usersTable)
 
 export const emails = createQueryObject(emailsTable)
 

@@ -9,7 +9,7 @@ const ReturnType = {
 }
 
 export const usersTable = {
-	name: 'Users',
+	name: 'users',
 	columns: {
 		username: {
 			name: 'Username',
@@ -35,18 +35,18 @@ export const usersTable = {
 } as const satisfies TableDefinition;
 
 export const emailsTable = {
-	name: 'Emails',
+	name: 'emails',
 	columns: {
 		username: {
-			name: 'Username',
+			name: 'username',
 			type: ReturnType.string
 		},
 		order: {
-			name: 'Order',
+			name: 'priorityorder',
 			type: ReturnType.number
 		},
 		email: {
-			name: 'Email',
+			name: 'email',
 			type: ReturnType.string
 		}
 	},
@@ -56,7 +56,7 @@ export const emailsTable = {
 } as const satisfies TableDefinition
 
 export const phonesTable = {
-	name: 'Phones',
+	name: 'phones',
 	columns: {
 		username: {
 			name: 'Username',
@@ -77,7 +77,7 @@ export const phonesTable = {
 } as const satisfies TableDefinition
 
 export const projectsTable = {
-	name: 'Projects',
+	name: 'projects',
 	columns: {
 		id: {
 			name: 'ID',
@@ -102,7 +102,7 @@ export const projectsTable = {
 } as const satisfies TableDefinition
 
 export const projectSettingsTable = {
-	name: 'Settings',
+	name: 'settings',
 	columns: {
 		id: {
 			name: 'ProjectID',
@@ -127,7 +127,7 @@ export const projectSettingsTable = {
 } as const satisfies TableDefinition
 
 export const rolesTable = {
-	name: 'Roles',
+	name: 'roles',
 	columns: {
 		id: {
 			name: 'ID',
@@ -152,7 +152,7 @@ export const rolesTable = {
 } as const satisfies TableDefinition
 
 export const privilegesTable = {
-	name: 'Privileges',
+	name: 'privileges',
 	columns: {
 		id: {
 			name: 'ID',
@@ -185,7 +185,7 @@ export const privilegesTable = {
 } as const satisfies TableDefinition
 
 export const allowsTable = {
-	name: 'Allows',
+	name: 'allows',
 	columns: {
 		roleID: {
 			name: 'RoleID',
@@ -203,7 +203,7 @@ export const allowsTable = {
 } as const satisfies TableDefinition
 
 export const membersTable = {
-	name: 'Members',
+	name: 'members',
 	columns: {
 		username: {
 			name: 'Username',
@@ -226,7 +226,7 @@ export const membersTable = {
 } as const satisfies TableDefinition
 
 export const aliasesTable = {
-	name: 'Aliases',
+	name: 'aliases',
 	columns: {
 		id: {
 			name: 'ID',
@@ -256,7 +256,7 @@ export const aliasesTable = {
 } as const satisfies TableDefinition
 
 export const keysTable = {
-	name: 'API Keys',
+	name: 'apikeys',
 	columns: {
 		token: {
 			name: 'Token',
