@@ -21,7 +21,6 @@ export type SelectQueryReturn<D extends TableDefinition> = { [definition in keyo
 export interface Table<D extends TableDefinition> {
 	(): Promise<Rows<D>>
 	definition: TableDefinition;
-	count: () => Promise<number>;
 }
 
 function createQueryObject<D extends TableDefinition>(table: D): Table<D> {
@@ -45,12 +44,6 @@ function createQueryObject<D extends TableDefinition>(table: D): Table<D> {
 	}
 
 	query.definition = table;
-
-	query.count = async function () {
-		const [[count]]: [[string]] = await sql`SELECT COUNT(*) FROM ${sql(this.definition.name)}`.values()
-
-		return Number(count);
-	}
 
 	return query;
 }

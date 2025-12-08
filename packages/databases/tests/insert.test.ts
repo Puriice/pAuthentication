@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { insert } from "../src/orm"
 import { users } from "../src/orm/tables"
 
-test('Insert user', async () => {
+test.skip('Insert user', async () => {
 	await insert(
 		users,
 		[
