@@ -38,15 +38,15 @@ export const emailsTable = {
 	name: 'emails',
 	columns: {
 		username: {
-			name: 'username',
+			name: 'Username',
 			type: ReturnType.string
 		},
 		order: {
-			name: 'priorityorder',
+			name: 'PriorityOrder',
 			type: ReturnType.number
 		},
 		email: {
-			name: 'email',
+			name: 'Email',
 			type: ReturnType.string
 		}
 	},
@@ -63,7 +63,7 @@ export const phonesTable = {
 			type: ReturnType.string
 		},
 		order: {
-			name: 'Order',
+			name: 'PriorityOrder',
 			type: ReturnType.number
 		},
 		number: {
@@ -95,6 +95,10 @@ export const projectsTable = {
 			name: 'CreateAt',
 			type: ReturnType.timestamp
 		},
+		lastModified: {
+			name: 'LastModified',
+			type: ReturnType.timestamp
+		}
 	},
 	linkedTables: {
 		users: usersTable
@@ -142,7 +146,7 @@ export const rolesTable = {
 			type: ReturnType.string
 		},
 		order: {
-			name: 'Order',
+			name: 'PriorityOrder',
 			type: ReturnType.number
 		}
 	},
@@ -171,11 +175,11 @@ export const privilegesTable = {
 			type: ReturnType.string
 		},
 		group: {
-			name: 'Group',
+			name: 'PrivilegeGroup',
 			type: ReturnType.string
 		},
 		order: {
-			name: 'Order',
+			name: 'PriorityOrder',
 			type: ReturnType.number
 		}
 	},
