@@ -1,27 +1,12 @@
 import { sql } from "bun";
 import { connection } from "..";
-import type { TableDefinition } from "../../types";
+import type { ColumnNames, Row, SelectQueryReturn, Table, TableDefinition } from "../../types";
 import { aliasesTable, allowsTable, emailsTable, keysTable, membersTable, phonesTable, privilegesTable, projectSettingsTable, projectsTable, rolesTable, usersTable } from "../tables";
 
-export type Row<D extends TableDefinition> = {
-	[definition in keyof D['columns']]: D['columns'][definition]['type']
-}
-
-export type Rows<D extends TableDefinition> = (Row<D>)[];
-
-export type ColumnNames<D extends TableDefinition> = { [definition in keyof D['columns']]: D['columns'][definition]['name'] }[keyof D['columns']]
-
-export type ReducedColumns<D extends TableDefinition> = [
+type ReducedColumns<D extends TableDefinition> = [
 	(keyof D['columns'])[],
 	ColumnNames<D>[]
 ]
-
-export type SelectQueryReturn<D extends TableDefinition> = { [definition in keyof D['columns']]: D['columns'][definition]['type'] }[keyof D['columns']][]
-
-export interface Table<D extends TableDefinition> {
-	(): Promise<Rows<D>>
-	definition: TableDefinition;
-}
 
 function createQueryObject<D extends TableDefinition>(table: D): Table<D> {
 	const entries = Object.entries(table.columns);
@@ -44,6 +29,12 @@ function createQueryObject<D extends TableDefinition>(table: D): Table<D> {
 	}
 
 	query.definition = table;
+
+	query.column = (name) => {
+		return {
+			column: name
+		}
+	}
 
 	return query;
 }

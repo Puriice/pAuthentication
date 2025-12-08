@@ -1,6 +1,5 @@
 import { sql } from "bun";
-import type { TableDefinition } from "../../types";
-import type { ColumnNames, Row, Table } from "./tables";
+import type { ColumnNames, Row, Table, TableDefinition } from "../../types";
 
 export async function count<D extends TableDefinition>(table: Table<D>): Promise<number> {
 	const [[count]]: [[string]] = await sql`SELECT COUNT(*) FROM ${sql(table.definition.name)}`.values()
