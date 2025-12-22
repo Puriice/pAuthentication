@@ -1,5 +1,6 @@
 import { sql } from "bun";
 import type { ColumnNames, Column, Row, Table, TableDefinition, ColumnKey, FilteredTableDefinition, SelectQueryReturn, Rows } from "../../types";
+import { pg } from "..";
 
 type ReducedColumns<D extends TableDefinition> = [
 	(keyof D['columns'])[],
@@ -81,6 +82,6 @@ export function use(tx: Bun.SQL = sql) {
 	};
 }
 
-export const { select, count, insert } = use(sql)
+export const { select, count, insert } = use(pg)
 
 
