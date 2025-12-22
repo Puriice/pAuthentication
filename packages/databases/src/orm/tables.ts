@@ -1,5 +1,5 @@
 import { sql } from "bun";
-import { connection } from "..";
+import { pg } from "..";
 import type { Column, ColumnKey, ColumnMaps, ColumnNames, FilteredTableDefinition, Row, SelectQueryReturn, Table, TableDefinition } from "../../types";
 import { aliasesTable, allowsTable, emailsTable, keysTable, membersTable, phonesTable, privilegesTable, projectSettingsTable, projectsTable, rolesTable, usersTable } from "../tables";
 import { select } from ".";
@@ -28,7 +28,7 @@ function createQueryObject<D extends TableDefinition>(table: D): Table<D> {
 
 	const query: Table<D> = async <C extends readonly Column<D, ColumnKey<D>>[]>(...columns: C) => {
 		if (columns.length > 0) {
-			const returns: SelectQueryReturn<FilteredTableDefinition<D, C>>[] = await connection`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(table.name)} `.values()
+			const returns: SelectQueryReturn<FilteredTableDefinition<D, C>>[] = await pg`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(table.name)} `.values()
 
 
 			return returns.map(values => {
@@ -39,7 +39,7 @@ function createQueryObject<D extends TableDefinition>(table: D): Table<D> {
 			})
 		}
 
-		const returns: SelectQueryReturn<D>[] = await connection`SELECT ${sql.unsafe(allColumns.join(', '))} FROM ${sql(table.name)} `.values()
+		const returns: SelectQueryReturn<D>[] = await pg`SELECT ${sql.unsafe(allColumns.join(', '))} FROM ${sql(table.name)} `.values()
 
 		return returns.map(values => {
 			return values.reduce((prev, curr, i) => {
