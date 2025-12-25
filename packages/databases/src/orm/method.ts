@@ -2,8 +2,6 @@ import { sql } from "bun";
 import type { ReducedColumns } from ".";
 import type { Column, ColumnKey, FilteredTableDefinition, Row, Rows, SelectQueryReturn, Table, TableDefinition } from "../../types"
 
-
-
 export class SelectObject<D extends TableDefinition> {
 	private keys: ReducedColumns<D>[0]
 	private allColumns: ReducedColumns<D>[1]
@@ -47,5 +45,30 @@ export class SelectObject<D extends TableDefinition> {
 				return prev;
 			}, {} as Row<D>)
 		})
+	}
+}
+
+export class InserObject<D extends TableDefinition, C extends Column<D, ColumnKey<D>>[]> {
+
+	constructor(private sql: Bun.SQL, private table: Table<D>, private columns: C) { }
+
+	async run(...values: Row<FilteredTableDefinition<D, C>>[]) {
+		if (values.length < 1) return false;
+
+		const insertValues = values.map(value => {
+			return Object.entries(value).reduce((prev, [key, value]) => {
+				if (value instanceof Date) {
+					value = value.toISOString().slice(0, 10)
+				}
+
+				prev[key] = value;
+
+				return prev;
+			}, {} as Record<string, unknown>)
+		})
+
+		await this.sql`INSERT INTO ${sql(this.table.definition.name)} ${sql(insertValues, ...this.columns.map(col => col?.column))}`
+
+		return true;
 	}
 }

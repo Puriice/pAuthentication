@@ -1,7 +1,7 @@
 import { sql } from "bun";
 import type { ColumnNames, Column, Row, Table, TableDefinition, ColumnKey, FilteredTableDefinition, SelectQueryReturn, Rows } from "../../types";
 import { pg } from "..";
-import { SelectObject } from "./method";
+import { InserObject, SelectObject } from "./method";
 
 export type ReducedColumns<D extends TableDefinition> = [
 	(keyof D['columns'])[],
@@ -26,25 +26,7 @@ export function use(tx: Bun.SQL = sql) {
 	}
 
 	function insert<D extends TableDefinition, C extends Column<D, ColumnKey<D>>[]>(table: Table<D>, ...columns: C) {
-		return async (...values: Row<FilteredTableDefinition<D, C>>[]) => {
-			if (values.length < 1) return false;
-
-			const insertValues = values.map(value => {
-				return Object.entries(value).reduce((prev, [key, value]) => {
-					if (value instanceof Date) {
-						value = value.toISOString().slice(0, 10)
-					}
-
-					prev[key] = value;
-
-					return prev;
-				}, {} as Record<string, unknown>)
-			})
-
-			await tx`INSERT INTO ${sql(table.definition.name)} ${sql(insertValues, ...columns.map(col => col?.column))}`
-
-			return true;
-		}
+		return new InserObject(tx, table, columns)
 	}
 
 	return {
