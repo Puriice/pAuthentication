@@ -1,49 +1,57 @@
 import { sql } from "bun";
-import type { ReducedColumns } from ".";
+import { pushTemplate, raw } from 'literals'
 import type { Column, ColumnKey, FilteredTableDefinition, Row, Rows, SelectQueryReturn, Table, TableDefinition } from "../../types"
 
-export class SelectObject<D extends TableDefinition> {
-	private keys: ReducedColumns<D>[0]
-	private allColumns: ReducedColumns<D>[1]
+type WhereCondition<D extends TableDefinition> = Partial<{
+	[C in keyof D['columns']]: D['columns'][C]['type'][]
+}>
 
-	constructor(private sql: Bun.SQL, private table: Table<D>) {
-		const entries = Object.entries(this.table.definition.columns);
+interface WhereableObject<D extends TableDefinition> {
+	condition: WhereCondition<D> | null;
+}
 
-		const [keys, allColumns]: ReducedColumns<D> = entries.reduce((prev, [key, value]) => {
-			prev[0].push(key)
-			prev[1].push(value.name)
+function where<D extends TableDefinition>(this: WhereableObject<D>, condition: WhereCondition<D>) {
+	this.condition = condition;
+}
 
-			return prev;
-		}, [[], []] as ReducedColumns<D>)
+export class SelectObject<D extends TableDefinition> implements WhereableObject<D> {
+	public condition: WhereCondition<D> | null = null;
+	public readonly where: typeof where<D> = where
 
-		this.keys = keys;
-		this.allColumns = allColumns;
-	}
+	constructor(private sql: Bun.SQL, private table: Table<D>) { }
 
 	async run(): Promise<Rows<D>>
 	async run<C extends readonly Column<D, ColumnKey<D>>[]>(
 		...columns: C
 	): Promise<Rows<FilteredTableDefinition<D, C>>>;
 	async run<C extends readonly Column<D, ColumnKey<D>>[]>(...columns: C): Promise<Rows<D>> {
-		if (columns.length > 0) {
-			const returns: SelectQueryReturn<FilteredTableDefinition<D, C>>[] = await this.sql`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(this.table.definition.name)} `.values()
+		if (columns.length == 0) {
+			columns = Object.values(this.table.columns) as unknown as C
+		}
 
-			return returns.map(values => {
-				return values.reduce((prev, curr, i) => {
-					prev[columns[i]?.key!] = curr;
-					return prev;
-				}, {} as Row<FilteredTableDefinition<D, C>>)
+		let tagged = raw`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(this.table.definition.name)}`
+
+		if (this.condition != null) {
+			tagged = pushTemplate(tagged)` WHERE`
+
+			const conditionEntries = Object.entries(this.condition)
+
+			conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
+				tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
+
+				if (conditionEntries[i + 1] != undefined) {
+					tagged = pushTemplate(tagged)` AND`
+				}
 			})
 		}
 
-
-		const returns: SelectQueryReturn<D>[] = await this.sql`SELECT ${sql.unsafe(this.allColumns.join(', '))} FROM ${sql(this.table.definition.name)} `.values()
+		const returns: SelectQueryReturn<FilteredTableDefinition<D, C>>[] = await this.sql(tagged.strings, ...tagged.values).values()
 
 		return returns.map(values => {
 			return values.reduce((prev, curr, i) => {
-				prev[this.keys[i]!] = curr;
+				prev[columns[i]?.key!] = curr;
 				return prev;
-			}, {} as Row<D>)
+			}, {} as Row<FilteredTableDefinition<D, C>>)
 		})
 	}
 }

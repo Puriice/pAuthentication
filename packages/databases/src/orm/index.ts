@@ -8,12 +8,6 @@ export type ReducedColumns<D extends TableDefinition> = [
 	ColumnNames<D>[]
 ]
 
-export function where<D extends TableDefinition>(column: Column<D, ColumnKey<D>>) {
-	return (strings: TemplateStringsArray, ...args: unknown[]) => {
-		console.log(strings.raw)
-	}
-}
-
 export function use(tx: Bun.SQL = sql) {
 	function select<D extends TableDefinition>(table: Table<D>) {
 		return new SelectObject(tx, table)
@@ -37,5 +31,9 @@ export function use(tx: Bun.SQL = sql) {
 }
 
 export const { select, count, insert } = use(pg)
+
+export function where() {
+
+}
 
 
