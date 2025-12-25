@@ -1,12 +1,7 @@
 import { sql } from "bun";
-import type { ColumnNames, Column, Row, Table, TableDefinition, ColumnKey, FilteredTableDefinition, SelectQueryReturn, Rows } from "../../types";
+import type { Column, Table, TableDefinition, ColumnKey } from "../../types";
 import { pg } from "..";
 import { InserObject, SelectObject } from "./method";
-
-export type ReducedColumns<D extends TableDefinition> = [
-	(keyof D['columns'])[],
-	ColumnNames<D>[]
-]
 
 export function use(tx: Bun.SQL = sql) {
 	function select<D extends TableDefinition>(table: Table<D>) {
@@ -31,9 +26,3 @@ export function use(tx: Bun.SQL = sql) {
 }
 
 export const { select, count, insert } = use(pg)
-
-export function where() {
-
-}
-
-

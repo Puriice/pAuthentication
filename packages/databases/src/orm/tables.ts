@@ -2,9 +2,8 @@ import { sql } from "bun";
 import { pg } from "..";
 import type { Column, ColumnKey, ColumnMaps, ColumnNames, FilteredTableDefinition, Row, SelectQueryReturn, Table, TableDefinition } from "../../types";
 import { aliasesTable, allowsTable, emailsTable, keysTable, membersTable, phonesTable, privilegesTable, projectSettingsTable, projectsTable, rolesTable, usersTable } from "../tables";
-import { select } from ".";
 
-type ReducedColumns<D extends TableDefinition> = [
+export type ReducedColumns<D extends TableDefinition> = [
 	(keyof D['columns'])[],
 	ColumnNames<D>[]
 ]

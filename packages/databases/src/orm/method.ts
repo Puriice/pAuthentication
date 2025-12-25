@@ -10,15 +10,23 @@ interface WhereableObject<D extends TableDefinition> {
 	condition: WhereCondition<D> | null;
 }
 
-function where<D extends TableDefinition>(this: WhereableObject<D>, condition: WhereCondition<D>) {
+function where<D extends TableDefinition, W extends WhereableObject<D>>(this: W, condition: WhereCondition<D>): W {
 	this.condition = condition;
+	return this;
 }
 
 export class SelectObject<D extends TableDefinition> implements WhereableObject<D> {
-	public condition: WhereCondition<D> | null = null;
-	public readonly where: typeof where<D> = where
+	public readonly condition: WhereCondition<D> | null = null;
+	public readonly where: typeof where<D, SelectObject<D>> = where
+	private isForUpdate: boolean = false;
 
 	constructor(private sql: Bun.SQL, private table: Table<D>) { }
+
+	async forUpdate() {
+		this.isForUpdate = true;
+
+		return this;
+	}
 
 	async run(): Promise<Rows<D>>
 	async run<C extends readonly Column<D, ColumnKey<D>>[]>(
@@ -43,6 +51,10 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 					tagged = pushTemplate(tagged)` AND`
 				}
 			})
+		}
+
+		if (this.isForUpdate) {
+			tagged = pushTemplate(tagged)` FOR UPDATE`
 		}
 
 		const returns: SelectQueryReturn<FilteredTableDefinition<D, C>>[] = await this.sql(tagged.strings, ...tagged.values).values()
