@@ -28,43 +28,49 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 		return this;
 	}
 
-	async run(): Promise<Rows<D>>
+	async run(): Promise<Rows<D> | null>
 	async run<C extends readonly Column<D, ColumnKey<D>>[]>(
 		...columns: C
-	): Promise<Rows<FilteredTableDefinition<D, C>>>;
-	async run<C extends readonly Column<D, ColumnKey<D>>[]>(...columns: C): Promise<Rows<D>> {
-		if (columns.length == 0) {
-			columns = Object.values(this.table.columns) as unknown as C
-		}
+	): Promise<Rows<FilteredTableDefinition<D, C>> | null>;
+	async run<C extends readonly Column<D, ColumnKey<D>>[]>(...columns: C): Promise<Rows<D> | null> {
+		try {
+			if (columns.length == 0) {
+				columns = Object.values(this.table.columns) as unknown as C
+			}
 
-		let tagged = raw`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(this.table.definition.name)}`
+			let tagged = raw`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(this.table.definition.name)}`
 
-		if (this.condition != null) {
-			tagged = pushTemplate(tagged)` WHERE`
+			if (this.condition != null) {
+				tagged = pushTemplate(tagged)` WHERE`
 
-			const conditionEntries = Object.entries(this.condition)
+				const conditionEntries = Object.entries(this.condition)
 
-			conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
-				tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
+				conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
+					tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
 
-				if (conditionEntries[i + 1] != undefined) {
-					tagged = pushTemplate(tagged)` AND`
-				}
+					if (conditionEntries[i + 1] != undefined) {
+						tagged = pushTemplate(tagged)` AND`
+					}
+				})
+			}
+
+			if (this.isForUpdate) {
+				tagged = pushTemplate(tagged)` FOR UPDATE`
+			}
+
+			const returns: SelectQueryReturn<FilteredTableDefinition<D, C>>[] = await this.sql(tagged.strings, ...tagged.values).values()
+
+			return returns.map(values => {
+				return values.reduce((prev, curr, i) => {
+					prev[columns[i]?.key!] = curr;
+					return prev;
+				}, {} as Row<FilteredTableDefinition<D, C>>)
 			})
+		} catch (e) {
+			console.error(e);
+
+			return null;
 		}
-
-		if (this.isForUpdate) {
-			tagged = pushTemplate(tagged)` FOR UPDATE`
-		}
-
-		const returns: SelectQueryReturn<FilteredTableDefinition<D, C>>[] = await this.sql(tagged.strings, ...tagged.values).values()
-
-		return returns.map(values => {
-			return values.reduce((prev, curr, i) => {
-				prev[columns[i]?.key!] = curr;
-				return prev;
-			}, {} as Row<FilteredTableDefinition<D, C>>)
-		})
 	}
 }
 
@@ -75,21 +81,27 @@ export class InserObject<D extends TableDefinition, C extends Column<D, ColumnKe
 	async run(...values: Row<FilteredTableDefinition<D, C>>[]) {
 		if (values.length < 1) return false;
 
-		const insertValues = values.map(value => {
-			return Object.entries(value).reduce((prev, [key, value]) => {
-				if (value instanceof Date) {
-					value = value.toISOString().slice(0, 10)
-				}
+		try {
+			const insertValues = values.map(value => {
+				return Object.entries(value).reduce((prev, [key, value]) => {
+					if (value instanceof Date) {
+						value = value.toISOString().slice(0, 10)
+					}
 
-				prev[key] = value;
+					prev[key] = value;
 
-				return prev;
-			}, {} as Record<string, unknown>)
-		})
+					return prev;
+				}, {} as Record<string, unknown>)
+			})
 
-		await this.sql`INSERT INTO ${sql(this.table.definition.name)} ${sql(insertValues, ...this.columns.map(col => col?.column))}`
+			await this.sql`INSERT INTO ${sql(this.table.definition.name)} ${sql(insertValues, ...this.columns.map(col => col?.column))}`
 
-		return true;
+			return true;
+		} catch (e) {
+			console.error(e);
+
+			return false;
+		}
 	}
 }
 
