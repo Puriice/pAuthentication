@@ -1,7 +1,7 @@
 import { sql } from "bun";
 import type { Column, Table, TableDefinition, ColumnKey } from "../../types";
 import { pg } from "..";
-import { InserObject, SelectObject } from "./method";
+import { DeleteObject, InserObject, SelectObject } from "./method";
 
 export function use(tx: Bun.SQL = sql) {
 	function select<D extends TableDefinition>(table: Table<D>) {
@@ -18,11 +18,16 @@ export function use(tx: Bun.SQL = sql) {
 		return new InserObject(tx, table, columns)
 	}
 
+	function del<D extends TableDefinition>(table: Table<D>) {
+		return new DeleteObject(tx, table)
+	}
+
 	return {
 		select,
 		count,
-		insert
+		insert,
+		del
 	};
 }
 
-export const { select, count, insert } = use(pg)
+export const { select, count, insert, del } = use(pg)

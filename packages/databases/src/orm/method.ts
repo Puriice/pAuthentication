@@ -92,3 +92,35 @@ export class InserObject<D extends TableDefinition, C extends Column<D, ColumnKe
 		return true;
 	}
 }
+
+export class DeleteObject<D extends TableDefinition> {
+	constructor(private sql: Bun.SQL, private table: Table<D>) { }
+
+	async run(condition: WhereCondition<D>) {
+		try {
+			if (condition == null) return false;
+
+			let tagged = raw`DELETE FROM ${sql(this.table.definition.name)}`
+
+			tagged = pushTemplate(tagged)` WHERE`
+
+			const conditionEntries = Object.entries(condition)
+
+			conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
+				tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
+
+				if (conditionEntries[i + 1] != undefined) {
+					tagged = pushTemplate(tagged)` AND`
+				}
+			})
+
+			await this.sql(tagged.strings, ...tagged.values).values();
+
+			return true
+		} catch (e) {
+			console.error(e);
+
+			return false;
+		}
+	}
+}
