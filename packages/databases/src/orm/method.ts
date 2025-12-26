@@ -19,9 +19,16 @@ function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<
 	let tagged = raw` WHERE`
 
 	conditions.forEach((condition, i) => {
-		tagged = pushTemplate(tagged)` (`
 
 		const conditionEntries = Object.entries(condition)
+
+		if (conditionEntries.length == 0) return;
+
+		if (i > 0) {
+			tagged = pushTemplate(tagged)` OR`
+		}
+
+		tagged = pushTemplate(tagged)` (`
 
 		conditionEntries.forEach(([key, values]: [string, unknown[] | unknown], i: number) => {
 			if (Array.isArray(values)) {
@@ -36,11 +43,10 @@ function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<
 		})
 
 		tagged = pushTemplate(tagged)` )`
-
-		if (i + 1 < conditions.length) {
-			tagged = pushTemplate(tagged)` OR`
-		}
 	})
+
+	if (tagged.toString() == ' WHERE') return raw``;
+
 	return tagged
 }
 
