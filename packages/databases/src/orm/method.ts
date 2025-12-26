@@ -131,16 +131,34 @@ export class InserObject<D extends TableDefinition, C extends Column<D, ColumnKe
 }
 
 export class DeleteObject<D extends TableDefinition> {
+	private isDanger: boolean = false;
+
 	constructor(private sql: Bun.SQL, private table: Table<D>) { }
+
+	public danger() {
+		this.isDanger = true;
+
+		return this;
+	}
+
+	public safe() {
+		this.isDanger = false;
+
+		return this;
+	}
 
 	async run(...condition: WhereCondition<D>[]) {
 		try {
-			if (condition == null) return false;
-			if (condition.length == 0) return false;
-
 			let tagged = raw`DELETE FROM ${sql(this.table.definition.name)}`
 
-			tagged = combine(tagged, craftWhereString(condition))
+			const whereString = craftWhereString(condition)
+
+			if (whereString.toString() != '') {
+				tagged = combine(tagged, whereString)
+			} else if (!this.isDanger) {
+				console.warn(`Empty WHERE clause is detected. To continue please run with DeleteObject#danger to allow empty where clause.`)
+				return false;
+			}
 
 			await this.sql(tagged.strings, ...tagged.values).values();
 
