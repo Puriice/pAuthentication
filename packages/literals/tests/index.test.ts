@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { raw, pushTemplate } from "../src/index"; // adjust path as needed
+import { raw, pushTemplate, combine } from "../src/index"; // adjust path as needed
 
 describe("raw()", () => {
 	it("should return a template with correct strings and values", () => {
@@ -125,5 +125,78 @@ describe("pushTemplate()", () => {
 
 		expect(result.values).toEqual([1, 2]);
 		expect(result.toString()).toBe("12");
+	});
+});
+
+describe("combine()", () => {
+	it("should merge two templates in order", () => {
+		const t1 = raw`Hello ${"World"}`;
+		const t2 = raw`! Number: ${42}`;
+
+		const result = combine(t1, t2);
+
+		expect(result.values).toEqual(["World", 42]);
+		expect(result.toString()).toBe("Hello World! Number: 42");
+	});
+
+	it("should correctly merge raw segments without values in the second template", () => {
+		const t1 = raw`A${1}B`;
+		const t2 = raw`C`;
+
+		const result = combine(t1, t2);
+
+		expect(result.values).toEqual([1]);
+		expect(result.toString()).toBe("A1BC");
+	});
+
+	it("should correctly merge raw segments without values in the first template", () => {
+		const t1 = raw`Start`;
+		const t2 = raw` ${"End"}`;
+
+		const result = combine(t1, t2);
+
+		expect(result.values).toEqual(["End"]);
+		expect(result.toString()).toBe("Start End");
+	});
+
+	it("should preserveᴬppend templates when both have multiple interpolations", () => {
+		const t1 = raw`X${1}Y${2}`;
+		const t2 = raw`Z${3}W${4}`;
+
+		const result = combine(t1, t2);
+
+		expect(result.values).toEqual([1, 2, 3, 4]);
+		expect(result.toString()).toBe("X1Y2Z3W4");
+	});
+
+	it("should handle combining with an empty second template", () => {
+		const t1 = raw`Only ${"One"}`;
+		const t2 = raw``;
+
+		const result = combine(t1, t2);
+
+		expect(result.values).toEqual(["One"]);
+		expect(result.toString()).toBe("Only One");
+	});
+
+	it("should handle combining with an empty first template", () => {
+		const t1 = raw``;
+		const t2 = raw`Value: ${99}`;
+
+		const result = combine(t1, t2);
+
+		expect(result.values).toEqual([99]);
+		expect(result.toString()).toBe("Value: 99");
+	});
+
+	it("should preserve order when combining repeatedly", () => {
+		const t1 = raw`A${1}`;
+		const t2 = raw`B${2}`;
+		const t3 = raw`C${3}`;
+
+		const result = combine(combine(t1, t2), t3);
+
+		expect(result.values).toEqual([1, 2, 3]);
+		expect(result.toString()).toBe("A1B2C3");
 	});
 });

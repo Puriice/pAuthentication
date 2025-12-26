@@ -1,5 +1,5 @@
 import { sql } from "bun";
-import { pushTemplate, raw } from 'literals'
+import { combine, pushTemplate, raw } from 'literals'
 import type { Column, ColumnKey, FilteredTableDefinition, Row, Rows, SelectQueryReturn, Table, TableDefinition } from "../../types"
 
 type WhereCondition<D extends TableDefinition> = Partial<{
@@ -13,6 +13,22 @@ interface WhereableObject<D extends TableDefinition> {
 function where<D extends TableDefinition, W extends WhereableObject<D>>(this: W, condition: WhereCondition<D>): W {
 	this.condition = condition;
 	return this;
+}
+
+function craftWhereString<D extends TableDefinition>(condition: WhereCondition<D>) {
+	let tagged = raw` WHERE`
+
+	const conditionEntries = Object.entries(condition)
+
+	conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
+		tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
+
+		if (conditionEntries[i + 1] != undefined) {
+			tagged = pushTemplate(tagged)` AND`
+		}
+	})
+
+	return tagged
 }
 
 export class SelectObject<D extends TableDefinition> implements WhereableObject<D> {
@@ -41,17 +57,7 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 			let tagged = raw`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(this.table.definition.name)}`
 
 			if (this.condition != null) {
-				tagged = pushTemplate(tagged)` WHERE`
-
-				const conditionEntries = Object.entries(this.condition)
-
-				conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
-					tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
-
-					if (conditionEntries[i + 1] != undefined) {
-						tagged = pushTemplate(tagged)` AND`
-					}
-				})
+				tagged = combine(tagged, craftWhereString(this.condition))
 			}
 
 			if (this.isForUpdate) {
@@ -114,17 +120,7 @@ export class DeleteObject<D extends TableDefinition> {
 
 			let tagged = raw`DELETE FROM ${sql(this.table.definition.name)}`
 
-			tagged = pushTemplate(tagged)` WHERE`
-
-			const conditionEntries = Object.entries(condition)
-
-			conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
-				tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
-
-				if (conditionEntries[i + 1] != undefined) {
-					tagged = pushTemplate(tagged)` AND`
-				}
-			})
+			tagged = combine(tagged, craftWhereString(condition))
 
 			await this.sql(tagged.strings, ...tagged.values).values();
 

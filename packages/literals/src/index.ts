@@ -43,3 +43,7 @@ export function pushTemplate(template: Template) {
 		)
 	}
 }
+
+export function combine(template1: Template, template2: Template) {
+	return pushTemplate(template1)(template2.strings, ...template2.values)
+}
