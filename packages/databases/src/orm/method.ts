@@ -7,11 +7,11 @@ type WhereCondition<D extends TableDefinition> = Partial<{
 }>
 
 interface WhereableObject<D extends TableDefinition> {
-	condition: WhereCondition<D>[];
+	conditions: WhereCondition<D>[];
 }
 
 function where<D extends TableDefinition, W extends WhereableObject<D>>(this: W, condition: WhereCondition<D>): W {
-	this.condition.push(condition);
+	this.conditions.push(condition);
 	return this;
 }
 
@@ -45,7 +45,7 @@ function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<
 }
 
 export class SelectObject<D extends TableDefinition> implements WhereableObject<D> {
-	public readonly condition: WhereCondition<D>[] = [];
+	public readonly conditions: WhereCondition<D>[] = [];
 	public readonly where: typeof where<D, SelectObject<D>> = where
 	private isForUpdate: boolean = false;
 
@@ -69,8 +69,8 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 
 			let tagged = raw`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(this.table.definition.name)}`
 
-			if (this.condition != null) {
-				tagged = combine(tagged, craftWhereString(this.condition))
+			if (this.conditions != null && this.conditions.length > 0) {
+				tagged = combine(tagged, craftWhereString(this.conditions))
 			}
 
 			if (this.isForUpdate) {
@@ -130,6 +130,7 @@ export class DeleteObject<D extends TableDefinition> {
 	async run(...condition: WhereCondition<D>[]) {
 		try {
 			if (condition == null) return false;
+			if (condition.length == 0) return false;
 
 			let tagged = raw`DELETE FROM ${sql(this.table.definition.name)}`
 
