@@ -7,32 +7,41 @@ type WhereCondition<D extends TableDefinition> = Partial<{
 }>
 
 interface WhereableObject<D extends TableDefinition> {
-	condition: WhereCondition<D> | null;
+	condition: WhereCondition<D>[];
 }
 
 function where<D extends TableDefinition, W extends WhereableObject<D>>(this: W, condition: WhereCondition<D>): W {
-	this.condition = condition;
+	this.condition.push(condition);
 	return this;
 }
 
-function craftWhereString<D extends TableDefinition>(condition: WhereCondition<D>) {
+function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<D>[]) {
 	let tagged = raw` WHERE`
 
-	const conditionEntries = Object.entries(condition)
+	conditions.forEach((condition, i) => {
+		tagged = pushTemplate(tagged)` (`
 
-	conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
-		tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
+		const conditionEntries = Object.entries(condition)
 
-		if (conditionEntries[i + 1] != undefined) {
-			tagged = pushTemplate(tagged)` AND`
+		conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
+			tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
+
+			if (conditionEntries[i + 1] != undefined) {
+				tagged = pushTemplate(tagged)` AND`
+			}
+		})
+
+		tagged = pushTemplate(tagged)` )`
+
+		if (i + 1 < conditions.length) {
+			tagged = pushTemplate(tagged)` OR`
 		}
 	})
-
 	return tagged
 }
 
 export class SelectObject<D extends TableDefinition> implements WhereableObject<D> {
-	public readonly condition: WhereCondition<D> | null = null;
+	public readonly condition: WhereCondition<D>[] = [];
 	public readonly where: typeof where<D, SelectObject<D>> = where
 	private isForUpdate: boolean = false;
 
@@ -114,7 +123,7 @@ export class InserObject<D extends TableDefinition, C extends Column<D, ColumnKe
 export class DeleteObject<D extends TableDefinition> {
 	constructor(private sql: Bun.SQL, private table: Table<D>) { }
 
-	async run(condition: WhereCondition<D>) {
+	async run(...condition: WhereCondition<D>[]) {
 		try {
 			if (condition == null) return false;
 
