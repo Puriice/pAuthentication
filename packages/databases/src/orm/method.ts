@@ -3,7 +3,7 @@ import { combine, pushTemplate, raw } from 'literals'
 import type { Column, ColumnKey, FilteredTableDefinition, Row, Rows, SelectQueryReturn, Table, TableDefinition } from "../../types"
 
 type WhereCondition<D extends TableDefinition> = Partial<{
-	[C in keyof D['columns']]: D['columns'][C]['type'][]
+	[C in keyof D['columns']]: D['columns'][C]['type'][] | D['columns'][C]['type']
 }>
 
 interface WhereableObject<D extends TableDefinition> {
@@ -23,8 +23,12 @@ function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<
 
 		const conditionEntries = Object.entries(condition)
 
-		conditionEntries.forEach(([key, values]: [string, unknown[]], i: number) => {
-			tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
+		conditionEntries.forEach(([key, values]: [string, unknown[] | unknown], i: number) => {
+			if (Array.isArray(values)) {
+				tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
+			} else {
+				tagged = pushTemplate(tagged)` ${sql.unsafe(key)} = ${values}`
+			}
 
 			if (conditionEntries[i + 1] != undefined) {
 				tagged = pushTemplate(tagged)` AND`
