@@ -7,11 +7,28 @@ type WhereCondition<D extends TableDefinition> = Partial<{
 }>
 
 interface WhereableObject<D extends TableDefinition> {
-	conditions: WhereCondition<D>[];
+	readonly conditions: WhereCondition<D>[];
+	readonly where: typeof where<D, this>;
 }
 
 function where<D extends TableDefinition, W extends WhereableObject<D>>(this: W, condition: WhereCondition<D>): W {
 	this.conditions.push(condition);
+	return this;
+}
+
+interface DangerOperation {
+	isDanger: boolean;
+	readonly danger: typeof danger<this>;
+	readonly safe: typeof safe<this>;
+}
+
+function safe<D extends DangerOperation>(this: D): D {
+	this.isDanger = false;
+	return this;
+}
+
+function danger<D extends DangerOperation>(this: D): D {
+	this.isDanger = true;
 	return this;
 }
 
@@ -52,7 +69,8 @@ function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<
 
 export class SelectObject<D extends TableDefinition> implements WhereableObject<D> {
 	public readonly conditions: WhereCondition<D>[] = [];
-	public readonly where: typeof where<D, SelectObject<D>> = where
+	public readonly where: (this: this, condition: WhereCondition<D>) => this = where;
+
 	private isForUpdate: boolean = false;
 
 	constructor(private sql: Bun.SQL, private table: Table<D>) { }
@@ -130,22 +148,62 @@ export class InserObject<D extends TableDefinition, C extends Column<D, ColumnKe
 	}
 }
 
-export class DeleteObject<D extends TableDefinition> {
-	private isDanger: boolean = false;
+export class UpdateObject<D extends TableDefinition, C extends Column<D, ColumnKey<D>>[]> implements WhereableObject<D>, DangerOperation {
+	public readonly conditions: WhereCondition<D>[] = [];
+	public readonly where: (this: this, condition: WhereCondition<D>) => this = where
+
+	public readonly isDanger: boolean = false;
+	public readonly danger: (this: this) => this = danger;
+	public readonly safe: (this: this) => this = safe;
+
+	constructor(private sql: Bun.SQL, private table: Table<D>, private columns: C) { };
+
+	async run(...values: Row<FilteredTableDefinition<D, C>>[]) {
+		if (values.length == 0) return;
+
+		try {
+			const updateValues = values.map(value => {
+				return Object.entries(value).reduce((prev, [key, value]) => {
+					if (value instanceof Date) {
+						value = value.toISOString().slice(0, 10)
+					}
+
+					prev[key] = value;
+
+					return prev;
+				}, {} as Record<string, unknown>)
+			})
+
+
+			let tagged = raw`UPDATE ${sql(this.table.definition.name)} SET ${sql(updateValues, ...this.columns.map(col => col?.column))}`
+
+			const whereString = craftWhereString(this.conditions);
+
+			if (whereString.toString() != '') {
+				tagged = combine(tagged, whereString)
+			} else if (!this.isDanger) {
+				console.warn(`Empty WHERE clause is detected. To continue please run with DeleteObject#danger to allow empty where clause.`)
+				return false;
+			}
+
+			await this.sql(tagged.strings, ...tagged.values).values();
+
+			return true;
+		} catch (e) {
+			console.error(e);
+
+			return false;
+		}
+	}
+}
+
+export class DeleteObject<D extends TableDefinition> implements DangerOperation {
+	public readonly isDanger: boolean = false;
+	public readonly danger: (this: this) => this = danger;
+	public readonly safe: (this: this) => this = safe;
 
 	constructor(private sql: Bun.SQL, private table: Table<D>) { }
 
-	public danger() {
-		this.isDanger = true;
-
-		return this;
-	}
-
-	public safe() {
-		this.isDanger = false;
-
-		return this;
-	}
 
 	async run(...condition: WhereCondition<D>[]) {
 		try {

@@ -1,7 +1,7 @@
 import { sql } from "bun";
 import type { Column, Table, TableDefinition, ColumnKey } from "../../types";
 import { pg } from "..";
-import { DeleteObject, InserObject, SelectObject } from "./method";
+import { DeleteObject, InserObject, SelectObject, UpdateObject } from "./method";
 
 export function use(tx: Bun.SQL = sql) {
 	function select<D extends TableDefinition>(table: Table<D>) {
@@ -18,6 +18,14 @@ export function use(tx: Bun.SQL = sql) {
 		return new InserObject(tx, table, columns)
 	}
 
+	function update<D extends TableDefinition, C extends Column<D, ColumnKey<D>>[]>(table: Table<D>, ...columns: C) {
+		if (columns.length == 0) {
+			return new UpdateObject(tx, table, [...Object.values(table.columns)] as const)
+		}
+
+		return new UpdateObject(tx, table, columns);
+	}
+
 	function del<D extends TableDefinition>(table: Table<D>) {
 		return new DeleteObject(tx, table)
 	}
@@ -26,6 +34,7 @@ export function use(tx: Bun.SQL = sql) {
 		select,
 		count,
 		insert,
+		update,
 		del
 	};
 }
