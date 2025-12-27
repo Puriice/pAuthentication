@@ -7,9 +7,6 @@
 		"shared/*",
 		"apps/*"
 	],
-	"scripts": {
-		"install": "bun install"
-	},
 	"devDependencies": {
 		"@types/bun": "latest"
 	},
