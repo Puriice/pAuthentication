@@ -72,11 +72,25 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 	public readonly where: (this: this, condition: WhereCondition<D>) => this = where;
 
 	private isForUpdate: boolean = false;
+	private _limit: number = 0;
+	private _offset: number = 0;
 
 	constructor(private sql: Bun.SQL, private table: Table<D>) { }
 
-	async forUpdate() {
+	public forUpdate() {
 		this.isForUpdate = true;
+
+		return this;
+	}
+
+	public limit(limit: number) {
+		this._limit = limit;
+
+		return this;
+	}
+
+	public offset(offset: number) {
+		this._offset = offset;
 
 		return this;
 	}
@@ -96,6 +110,15 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 			if (this.conditions != null && this.conditions.length > 0) {
 				tagged = combine(tagged, craftWhereString(this.conditions))
 			}
+
+			if (this._limit > 0) {
+				tagged = pushTemplate(tagged)` LIMIT ${this._limit}`
+
+				if (this._offset > 0) {
+					tagged = pushTemplate(tagged)` OFFSET ${this._offset}`
+				}
+			}
+
 
 			if (this.isForUpdate) {
 				tagged = pushTemplate(tagged)` FOR UPDATE`
