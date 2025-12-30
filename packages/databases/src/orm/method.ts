@@ -67,6 +67,18 @@ function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<
 	return tagged
 }
 
+interface LimitAndOffset {
+	limit: number;
+	offset: number;
+}
+
+interface Pagination {
+	page: number;
+	length?: number;
+}
+
+const DEFAULT_PAGINATION_LENGTH = 10;
+
 export class SelectObject<D extends TableDefinition> implements WhereableObject<D> {
 	public readonly conditions: WhereCondition<D>[] = [];
 	public readonly where: (this: this, condition: WhereCondition<D>) => this = where;
@@ -83,14 +95,20 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 		return this;
 	}
 
-	public limit(limit: number) {
-		this._limit = limit;
+	// public page(options: Pagination): this
+	// public page(options: LimitAndOffset): this
+	public page(options: LimitAndOffset | Pagination): this {
+		if ("page" in options) {
+			if (options.length == undefined) {
+				options.length = DEFAULT_PAGINATION_LENGTH;
+			}
 
-		return this;
-	}
-
-	public offset(offset: number) {
-		this._offset = offset;
+			this._limit = options.length;
+			this._offset = Math.max(options.page - 1, 1) * options.length;
+		} else {
+			this._limit = options.limit;
+			this._offset = options.offset;
+		}
 
 		return this;
 	}
