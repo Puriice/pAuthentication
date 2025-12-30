@@ -31,6 +31,14 @@ export const usersTable = {
 			name: 'birthday',
 			type: ReturnType.date
 		},
+		createAt: {
+			name: 'createat',
+			type: ReturnType.timestamp
+		},
+		lastModified: {
+			name: 'lastmodified',
+			type: ReturnType.timestamp
+		}
 	}
 } as const satisfies TableDefinition;
 

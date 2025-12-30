@@ -1,6 +1,6 @@
 import { sql } from "bun";
 import { combine, pushTemplate, raw } from 'literals'
-import type { Column, ColumnKey, FilteredTableDefinition, Row, Rows, SelectQueryReturn, Table, TableDefinition } from "../../types"
+import type { Column, ColumnKey, FilteredTableDefinition, Row, Rows, SelectQueryReturn, Table, TableDefinition, TableDefinitionWithoutSystemColumns } from "../../types"
 
 type WhereCondition<D extends TableDefinition> = Partial<{
 	[C in keyof D['columns']]: D['columns'][C]['type'][] | D['columns'][C]['type']
@@ -79,6 +79,13 @@ interface Pagination {
 
 const DEFAULT_PAGINATION_LENGTH = 10;
 
+type Order = 'ASC' | 'DESC'
+
+type OrderBy<D extends TableDefinition> = {
+	column: Column<D, ColumnKey<D>>;
+	order?: Order
+} | Column<D, ColumnKey<D>>
+
 export class SelectObject<D extends TableDefinition> implements WhereableObject<D> {
 	public readonly conditions: WhereCondition<D>[] = [];
 	public readonly where: (this: this, condition: WhereCondition<D>) => this = where;
@@ -86,6 +93,7 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 	private isForUpdate: boolean = false;
 	private _limit: number = 0;
 	private _offset: number = 0;
+	private _orderBy: OrderBy<D>[] = []
 
 	constructor(private sql: Bun.SQL, private table: Table<D>) { }
 
@@ -95,8 +103,12 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 		return this;
 	}
 
-	// public page(options: Pagination): this
-	// public page(options: LimitAndOffset): this
+	public orderBy(...bys: OrderBy<D>[]) {
+		this._orderBy = bys;
+
+		return this;
+	}
+
 	public page(options: LimitAndOffset | Pagination): this {
 		if ("page" in options) {
 			if (options.length == undefined) {
@@ -104,7 +116,7 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 			}
 
 			this._limit = options.length;
-			this._offset = Math.max(options.page - 1, 1) * options.length;
+			this._offset = Math.max(options.page - 1, 0) * options.length;
 		} else {
 			this._limit = options.limit;
 			this._offset = options.offset;
@@ -127,6 +139,24 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 
 			if (this.conditions != null && this.conditions.length > 0) {
 				tagged = combine(tagged, craftWhereString(this.conditions))
+			}
+
+			if (this._orderBy.length > 0) {
+				let orderStatement = raw` ORDER BY`
+
+				this._orderBy.forEach((column, i) => {
+					if ('order' in column) {
+						orderStatement = pushTemplate(orderStatement)` ${column.column} ${column.order ?? 'ASC'}`
+					} else {
+						orderStatement = pushTemplate(orderStatement)` ${column.column} ASC`
+					}
+
+
+					if (this._orderBy[i + 1] != undefined) {
+						orderStatement = pushTemplate(orderStatement)`,`
+					}
+				})
+
 			}
 
 			if (this._limit > 0) {
@@ -162,23 +192,29 @@ export class InserObject<D extends TableDefinition, C extends Column<D, ColumnKe
 
 	constructor(private sql: Bun.SQL, private table: Table<D>, private columns: C) { }
 
-	async run(...values: Row<FilteredTableDefinition<D, C>>[]) {
+	async run(...values: Row<TableDefinitionWithoutSystemColumns<FilteredTableDefinition<D, C>>>[]) {
 		if (values.length < 1) return false;
 
 		try {
 			const insertValues = values.map(value => {
 				return Object.entries(value).reduce((prev, [key, value]) => {
 					if (value instanceof Date) {
-						value = value.toISOString().slice(0, 10)
+						value = value.toISOString()
 					}
-
-					prev[key] = value;
+					prev[key.toLowerCase()] = value;
 
 					return prev;
 				}, {} as Record<string, unknown>)
 			})
 
-			await this.sql`INSERT INTO ${sql(this.table.definition.name)} ${sql(insertValues, ...this.columns.map(col => col?.column))}`
+			let filterColumns = this.columns
+				.map(col => col?.column)
+
+			if (process.env.NODE_ENV !== 'TEST') {
+				filterColumns = filterColumns.filter(col => col !== 'createat' && col !== 'lastmodified')
+			}
+
+			await this.sql`INSERT INTO ${sql(this.table.definition.name)} ${sql(insertValues, ...filterColumns)}`
 
 			return true;
 		} catch (e) {

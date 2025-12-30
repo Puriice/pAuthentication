@@ -68,6 +68,16 @@ type FilteredTableDefinition<
 	linkedTables?: D['linkedTables'];
 };
 
+type SystemColumnNames = 'createAt' | 'lastModified'
+
+type TableDefinitionWithoutSystemColumns<
+	D extends TableDefinition
+> = {
+	name: D['name'];
+	columns: ExcludeColumnsByName<D, SystemColumnNames>;
+	linkedTables?: D['linkedTables'];
+};
+
 /* --- Table interface: no-arg returns full rows, columns list returns filtered rows --- */
 
 export interface Table<D extends TableDefinition> {
