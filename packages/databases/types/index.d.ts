@@ -15,6 +15,11 @@ type ColumnKey<D extends TableDefinition> = keyof D['columns'];
 type ColumnNameOf<D extends TableDefinition, K extends ColumnKey<D>> =
 	D['columns'][K]['name'];
 
+type ColumnTypeOf<D extends TableDefinition, K extends ColumnKey<D>> =
+	D['columns'][K]['type'];
+
+
+
 export type ColumnNames<D extends TableDefinition> =
 	ColumnNameOf<D, ColumnKey<D>>;
 
@@ -26,6 +31,7 @@ export type Column<
 > = {
 	key: K,
 	column: ColumnNameOf<D, K>;
+	type: ColumnTypeOf<D, K>
 };
 
 /* --- map of column objects for the table (runtime shape) --- */
