@@ -21,6 +21,7 @@ export function createSQL({
 		port,
 		database,
 		username,
-		password
+		password,
+		bigint: true
 	})
 }

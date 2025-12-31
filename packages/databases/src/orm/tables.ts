@@ -1,7 +1,7 @@
 import { sql } from "bun";
 import { pg } from "..";
 import type { Column, ColumnKey, ColumnMaps, ColumnNames, FilteredTableDefinition, Row, SelectQueryReturn, Table, TableDefinition } from "../../types";
-import { aliasesTable, allowsTable, emailsTable, keysTable, membersTable, phonesTable, privilegesTable, projectSettingsTable, projectsTable, rolesTable, usersTable } from "../tables";
+import { aliasesTable, allowsTable, emailsTable, keysTable, membersTable, phonesTable, privilegesTable, projectSettingsTable, projectsTable, rolesTable, testsTable, usersTable } from "../tables";
 
 export type ReducedColumns<D extends TableDefinition> = [
 	(keyof D['columns'])[],
@@ -20,6 +20,7 @@ function createQueryObject<D extends TableDefinition>(table: D): Table<D> {
 		columnsMap[key] = {
 			key: key,
 			column: value.name,
+			type: value.type
 		}
 
 		return prev;
@@ -28,7 +29,6 @@ function createQueryObject<D extends TableDefinition>(table: D): Table<D> {
 	const query: Table<D> = async <C extends readonly Column<D, ColumnKey<D>>[]>(...columns: C) => {
 		if (columns.length > 0) {
 			const returns: SelectQueryReturn<FilteredTableDefinition<D, C>>[] = await pg`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(table.name)} `.values()
-
 
 			return returns.map(values => {
 				return values.reduce((prev, curr, i) => {
@@ -76,3 +76,5 @@ export const privileges = createQueryObject(privilegesTable)
 export const allows = createQueryObject(allowsTable)
 
 export const keys = createQueryObject(keysTable)
+
+export const tests = createQueryObject(testsTable)

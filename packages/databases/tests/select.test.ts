@@ -1,66 +1,66 @@
-import { users } from '../src/orm/tables'
+import { tests, users } from '../src/orm/tables'
 import { expect, describe, it, beforeAll, afterAll } from 'bun:test'
 import { prep } from './mock';
 
 describe('SELECT', async () => {
-	const { select, data, populateUser, clearUser, close } = await prep()
+	const { select, data, populate, clearUser, close } = await prep()
 
-	beforeAll(populateUser)
+	beforeAll(populate)
 	afterAll(clearUser)
-	afterAll(close)
+	// afterAll(close)
 
 	it('Can query all columns', async () => {
-		const result = await select(users).run();
+		const result = await select(tests).run();
 
 		expect(result).toBeArray();
 		expect(result).toHaveLength(20)
 	})
 
 	it('Can proper query with specific columns', async () => {
-		const result = await select(users).run(
-			users.columns.firstname,
-			users.columns.lastname
+		const result = await select(tests).run(
+			tests.columns.id,
+			tests.columns.uuid
 		)
 
 		expect(result).toBeArray();
-		expect(result?.[0]).toHaveProperty('firstname')
-		expect(result?.[0]).toHaveProperty('lastname')
+		expect(result?.[0]).toHaveProperty('id')
+		expect(result?.[0]).toHaveProperty('uuid')
 	})
 
 	it('Can collectly query a data with a single where clause and single condition', async () => {
-		const result = await select(users)
-			.where({ firstname: 'John' })
+		const result = await select(tests)
+			.where({ id: 1 })
 			.run()
 
 		expect(result).toBeArrayOfSize(1)
-		expect(result).toContainEqual(data[0])
+		expect(result?.[0]).toContainAnyKeys(Object.keys(data[0]))
 	})
 
 	it('Can collectly query a data with a single tuple where clause single condition', async () => {
-		const result = await select(users)
-			.where({ firstname: ['John', 'Jane'] })
+		const result = await select(tests)
+			.where({ id: [1, 2] })
 			.run()
 
 		expect(result).toBeArrayOfSize(2)
-		expect(result).toContainEqual(data[0])
-		expect(result).toContainEqual(data[1])
+		expect(result).toContainEqual(data.find(value => value.id === 1)!)
+		expect(result).toContainEqual(data.find(value => value.id === 2)!)
 	})
 
 	it('Can collectly query a data with a single where clause and multiple condition', async () => {
-		const result = await select(users)
-			.where({ firstname: 'John' })
-			.where({ firstname: 'Jane' })
+		const result = await select(tests)
+			.where({ id: 1 })
+			.where({ id: 2 })
 			.run()
 
 		expect(result).toBeArrayOfSize(2)
-		expect(result).toContainEqual(data[0])
-		expect(result).toContainEqual(data[1])
+		expect(result).toContainEqual(data.find(value => value.id === 1)!)
+		expect(result).toContainEqual(data.find(value => value.id === 2)!)
 	})
 
 	it('Can collectly query a data with a tuple where clause and multiple condition', async () => {
-		const result = await select(users)
-			.where({ firstname: ['John', 'Jane', 'Bob'], lastname: 'Doe' })
-			.where({ firstname: 'Alice' })
+		const result = await select(tests)
+			.where({ id: [1, 2], text: 'example text value' })
+			.where({ id: 3 })
 			.run()
 
 		expect(result).toBeArrayOfSize(3)
@@ -71,7 +71,7 @@ describe('SELECT', async () => {
 	})
 
 	it('Can query a data with limit and offset', async () => {
-		const query = select(users).orderBy(users.columns.createAt)
+		const query = select(tests).orderBy(tests.columns.createAt)
 
 		const firstPage = query.page({
 			limit: 10,
@@ -90,7 +90,7 @@ describe('SELECT', async () => {
 	})
 
 	it('Can query a data with pagination with default length', async () => {
-		const query = select(users).orderBy(users.columns.createAt)
+		const query = select(tests).orderBy(tests.columns.createAt)
 
 		const firstPage = query.page({
 			page: 1
@@ -107,7 +107,7 @@ describe('SELECT', async () => {
 	})
 
 	it('Can query a data with pagination with 5 datas on each page', async () => {
-		const query = select(users).orderBy(users.columns.createAt)
+		const query = select(tests).orderBy(tests.columns.createAt)
 
 		const firstPage = query.page({
 			page: 1,

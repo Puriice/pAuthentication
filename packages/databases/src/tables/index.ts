@@ -1,11 +1,39 @@
 import type { TableDefinition } from "../../types";
 
+export class StringArray { }
+export class IntegerArray { }
+export class BigintArray { }
+export class JSONBArray { }
+
 const ReturnType = {
 	string: '',
 	number: 0,
+	bigint: 0n,
+	numeric: "0.00",             // NUMERIC / DECIMAL (returned as string)
 	boolean: true,
 	date: new Date(),
-	timestamp: new Date()
+	time: "12:34:56",            // TIME (string)
+	timestamp: new Date(),      // TIMESTAMP
+	timestamptz: new Date(),    // TIMESTAMP WITH TIME ZONE
+	interval: "1 day 02:03:04", // INTERVAL (string)
+
+	// UUID
+	uuid: "550e8400-e29b-41d4-a716-446655440000",
+
+	// JSON
+	json: {},                   // JSON / JSONB → parsed JS object
+
+	// Binary
+	bytea: new Uint8Array(),
+
+	// Arrays
+	stringArray: new StringArray(),    // TEXT[]
+	numberArray: new IntegerArray(),     // INTEGER[]
+	bigintArray: new BigintArray(),      // BIGINT[]
+	jsonArray: new JSONBArray(),        // JSONB[]
+
+	// Nullability
+	nullable: null              // any nullable column
 }
 
 export const usersTable = {
@@ -296,3 +324,110 @@ export const keysTable = {
 		}
 	}
 } as const satisfies TableDefinition
+
+export const testsTable = {
+	name: 'tests',
+	columns: {
+		id: {
+			name: 'id',
+			type: ReturnType.number
+		},
+		// Numeric
+		smallint: {
+			name: 'col_smallint',
+			type: ReturnType.number
+		},
+		integer: {
+			name: 'col_integer',
+			type: ReturnType.number
+		},
+		bigint: {
+			name: 'col_bigint',
+			type: ReturnType.bigint
+		},
+		numeric: {
+			name: 'col_numeric',
+			type: ReturnType.numeric
+		},
+		real: {
+			name: 'col_real',
+			type: ReturnType.number
+		},
+		double: {
+			name: 'col_double',
+			type: ReturnType.number
+		},
+
+		// String
+		varchar: {
+			name: 'col_varchar',
+			type: ReturnType.string
+		},
+		text: {
+			name: 'col_text',
+			type: ReturnType.string
+		},
+
+		// Boolean
+		boolean: {
+			name: 'col_boolean',
+			type: ReturnType.boolean
+		},
+
+		// Date / Time
+		date: {
+			name: 'col_date',
+			type: ReturnType.date
+		},
+		timestamp: {
+			name: 'col_timestamp',
+			type: ReturnType.timestamp
+		},
+		timestamptz: {
+			name: 'col_timestamp_tz',
+			type: ReturnType.timestamptz
+		},
+		interval: {
+			name: 'col_interval',
+			type: ReturnType.interval
+		},
+
+		// UUID
+		uuid: {
+			name: 'col_uuid',
+			type: ReturnType.uuid
+		},
+
+		// JSON
+		json: {
+			name: 'col_json',
+			type: ReturnType.json
+		},
+
+		// Binary
+		bytea: {
+			name: 'col_bytea',
+			type: ReturnType.bytea
+		},
+
+		// Arrays
+		intArray: {
+			name: 'col_int_array',
+			type: ReturnType.numberArray
+		},
+		textArray: {
+			name: 'col_text_array',
+			type: ReturnType.stringArray
+		},
+
+		// Metadata
+		createAt: {
+			name: 'created_at',
+			type: ReturnType.timestamp
+		},
+		lastModified: {
+			name: 'updated_at',
+			type: ReturnType.timestamp
+		}
+	}
+} as const satisfies TableDefinition;

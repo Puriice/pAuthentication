@@ -1,9 +1,14 @@
 import { sql } from "bun";
 import { combine, pushTemplate, raw } from 'literals'
 import type { Column, ColumnKey, FilteredTableDefinition, Row, Rows, SelectQueryReturn, Table, TableDefinition, TableDefinitionWithoutSystemColumns } from "../../types"
+import type { numeric, NumericOperation } from "../../types/operator";
+import { BetweenOperation, ComparisonOperation } from "./operators/numeric.class";
+import { IntegerArray, StringArray } from "../tables";
+
+type NumericCondition<T> = T extends numeric ? NumericOperation<T> : never
 
 type WhereCondition<D extends TableDefinition> = Partial<{
-	[C in keyof D['columns']]: D['columns'][C]['type'][] | D['columns'][C]['type']
+	[C in keyof D['columns']]: D['columns'][C]['type'][] | D['columns'][C]['type'] | NumericCondition<D['columns'][C]['type']>
 }>
 
 interface WhereableObject<D extends TableDefinition> {
@@ -47,11 +52,17 @@ function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<
 
 		tagged = pushTemplate(tagged)` (`
 
-		conditionEntries.forEach(([key, values]: [string, unknown[] | unknown], i: number) => {
+		conditionEntries.forEach(([key, values]: [string, unknown[] | unknown | NumericOperation<numeric>], i: number) => {
+			let column = key.toLowerCase();
+
 			if (Array.isArray(values)) {
-				tagged = pushTemplate(tagged)` ${sql.unsafe(key)} IN ${sql(values)}`
+				tagged = pushTemplate(tagged)` ${sql.unsafe(column)} IN ${sql(values)}`
+			} else if (values instanceof ComparisonOperation) {
+				tagged = pushTemplate(tagged)` ${sql.unsafe(column)} ${sql.unsafe(values.operator)} ${sql(values.value)}`
+			} else if (values instanceof BetweenOperation) {
+				tagged = pushTemplate(tagged)` ${sql.unsafe(column)} BETWEEN ${sql(values.from)} AND ${sql(values.to)}`
 			} else {
-				tagged = pushTemplate(tagged)` ${sql.unsafe(key)} = ${values}`
+				tagged = pushTemplate(tagged)` ${sql.unsafe(column)} = ${values}`
 			}
 
 			if (conditionEntries[i + 1] != undefined) {
@@ -188,6 +199,34 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 	}
 }
 
+function parseValue<D extends TableDefinition, C extends Column<D, ColumnKey<D>>[]>(table: Table<D>, values: Row<TableDefinitionWithoutSystemColumns<FilteredTableDefinition<D, C>>>[]) {
+	return values.map(value => {
+		return Object.entries(value).reduce((prev, [key, value]) => {
+			const column = table.columns[key]
+
+			if (!column) return prev;
+
+			if (value instanceof Date) {
+				value = value.toISOString()
+			}
+
+			if (Array.isArray(value)) {
+				if (column.type as any instanceof IntegerArray) {
+					value = sql.array(value, 'INTEGER').serializedValues
+				} else if (column.type as any instanceof StringArray) {
+					value = sql.array(value, 'TEXT').serializedValues
+				} else {
+					value = sql.array(value).serializedValues
+				}
+			}
+
+			prev[column.column] = value;
+
+			return prev;
+		}, {} as Record<string, unknown>)
+	})
+}
+
 export class InserObject<D extends TableDefinition, C extends Column<D, ColumnKey<D>>[]> {
 
 	constructor(private sql: Bun.SQL, private table: Table<D>, private columns: C) { }
@@ -196,19 +235,10 @@ export class InserObject<D extends TableDefinition, C extends Column<D, ColumnKe
 		if (values.length < 1) return false;
 
 		try {
-			const insertValues = values.map(value => {
-				return Object.entries(value).reduce((prev, [key, value]) => {
-					if (value instanceof Date) {
-						value = value.toISOString()
-					}
-					prev[key.toLowerCase()] = value;
-
-					return prev;
-				}, {} as Record<string, unknown>)
-			})
+			const insertValues = parseValue(this.table, values)
 
 			let filterColumns = this.columns
-				.map(col => col?.column)
+				.map(col => col.column)
 
 			if (process.env.NODE_ENV !== 'TEST') {
 				filterColumns = filterColumns.filter(col => col !== 'createat' && col !== 'lastmodified')
