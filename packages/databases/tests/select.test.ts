@@ -1,6 +1,7 @@
 import { tests, users } from '../src/orm/tables'
 import { expect, describe, it, beforeAll, afterAll } from 'bun:test'
 import { prep } from './mock';
+import { between, greatThan, greatThanOrEqualTo, lessThan, lessThanOrEqualTo } from '../src/orm/operators/numeric';
 
 describe('SELECT', async () => {
 	const { select, data, populate, clearUser } = await prep()
@@ -122,4 +123,39 @@ describe('SELECT', async () => {
 		expect((await firstPage)?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
 		expect((await secondPage)?.filter(value => [6, 7, 8, 9, 10].includes(value.id))).toBeArrayOfSize(5)
 	})
+
+	it('Can query a data with a great than query', async () => {
+		const result = await select(tests).where({ id: greatThan(15) }).run();
+
+		expect(result).toBeArrayOfSize(5)
+		expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
+	});
+
+	it('Can query a data with a less than query', async () => {
+		const result = await select(tests).where({ id: lessThan(6) }).run();
+
+		expect(result).toBeArrayOfSize(5)
+		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+	});
+
+	it('Can query a data with a great than or equal to query', async () => {
+		const result = await select(tests).where({ id: greatThanOrEqualTo(16) }).run();
+
+		expect(result).toBeArrayOfSize(5)
+		expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
+	});
+
+	it('Can query a data with a less than or equal to query', async () => {
+		const result = await select(tests).where({ id: lessThanOrEqualTo(5) }).run();
+
+		expect(result).toBeArrayOfSize(5)
+		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+	});
+
+	it('Can query a data with a between query', async () => {
+		const result = await select(tests).where({ id: between(1, 5) }).run();
+
+		expect(result).toBeArrayOfSize(5)
+		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+	});
 });
