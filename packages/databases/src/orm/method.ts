@@ -144,13 +144,21 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 	): Promise<Rows<FilteredTableDefinition<D, C>> | null>;
 	async run<C extends readonly Column<D, ColumnKey<D>>[]>(...columns: C): Promise<Rows<D> | null> {
 		try {
-
-			let tagged = raw`SELECT * FROM ${sql(this.table.definition.name)}`
-
-			// tagged = pushTemplate(tagged)` ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(this.table.definition.name)}`
 			if (columns.length === 0) {
 				columns = Object.values(this.table.columns) as unknown as C;
 			}
+
+			let tagged = raw`SELECT`
+
+			columns.forEach((column, i) => {
+				tagged = pushTemplate(tagged)` ${sql(column.column)}`
+
+				if (columns[i + 1] != undefined) {
+					tagged = pushTemplate(tagged)`,`
+				}
+			})
+
+			tagged = pushTemplate(tagged)` FROM ${sql(this.table.definition.name)}`
 
 			if (this.conditions != null && this.conditions.length > 0) {
 				tagged = combine(tagged, craftWhereString(this.table, this.conditions))

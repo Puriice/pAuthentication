@@ -23,8 +23,7 @@ describe('SELECT', async () => {
 		)
 
 		expect(result).toBeArray();
-		expect(result?.[0]).toHaveProperty('id')
-		expect(result?.[0]).toHaveProperty('uuid')
+		expect(result?.[0]).toContainAllKeys(['id', 'uuid'])
 	})
 
 	it('Can collectly query a data with a single where clause and single condition', async () => {
@@ -158,4 +157,11 @@ describe('SELECT', async () => {
 		expect(result).toBeArrayOfSize(5)
 		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
 	});
+
+	it('Could prevent sql injection', async () => {
+		const result = await select(tests).where({ text: '\' OR 1=1 --' }).run()
+
+		expect(result).toBeEmpty()
+	});
+
 });
