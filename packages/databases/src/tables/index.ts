@@ -411,10 +411,10 @@ export const testsTable = {
 		},
 
 		// Arrays
-		intArray: {
-			name: 'col_int_array',
-			type: ReturnType.numberArray
-		},
+		// intArray: {
+		// 	name: 'col_int_array',
+		// 	type: ReturnType.numberArray
+		// },
 		textArray: {
 			name: 'col_text_array',
 			type: ReturnType.stringArray

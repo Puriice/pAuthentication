@@ -22,6 +22,6 @@ export function createSQL({
 		database,
 		username,
 		password,
-		bigint: true
+		bigint: true,
 	})
 }

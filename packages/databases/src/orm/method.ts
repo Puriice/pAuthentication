@@ -37,7 +37,7 @@ function danger<D extends DangerOperation>(this: D): D {
 	return this;
 }
 
-function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<D>[]) {
+function craftWhereString<D extends TableDefinition>(table: Table<D>, conditions: WhereCondition<D>[]) {
 	let tagged = raw` WHERE`
 
 	conditions.forEach((condition, i) => {
@@ -53,16 +53,18 @@ function craftWhereString<D extends TableDefinition>(conditions: WhereCondition<
 		tagged = pushTemplate(tagged)` (`
 
 		conditionEntries.forEach(([key, values]: [string, unknown[] | unknown | NumericOperation<numeric>], i: number) => {
-			let column = key.toLowerCase();
+			let column = table.columns[key]?.column;
+
+			if (!column) return;
 
 			if (Array.isArray(values)) {
-				tagged = pushTemplate(tagged)` ${sql.unsafe(column)} IN ${sql(values)}`
+				tagged = pushTemplate(tagged)` ${sql`${sql(column)} IN ${sql(values)}`}`
 			} else if (values instanceof ComparisonOperation) {
-				tagged = pushTemplate(tagged)` ${sql.unsafe(column)} ${sql.unsafe(values.operator)} ${sql(values.value)}`
+				tagged = pushTemplate(tagged)` ${sql`${sql(column)} ${sql.unsafe(values.operator)} ${values.value}`}`
 			} else if (values instanceof BetweenOperation) {
-				tagged = pushTemplate(tagged)` ${sql.unsafe(column)} BETWEEN ${sql(values.from)} AND ${sql(values.to)}`
+				tagged = pushTemplate(tagged)` ${sql`${sql(column)} BETWEEN ${values.from} AND ${values.to}`}`
 			} else {
-				tagged = pushTemplate(tagged)` ${sql.unsafe(column)} = ${values}`
+				tagged = pushTemplate(tagged)` ${sql`${sql(column)} = ${values}`}`
 			}
 
 			if (conditionEntries[i + 1] != undefined) {
@@ -142,14 +144,16 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 	): Promise<Rows<FilteredTableDefinition<D, C>> | null>;
 	async run<C extends readonly Column<D, ColumnKey<D>>[]>(...columns: C): Promise<Rows<D> | null> {
 		try {
-			if (columns.length == 0) {
-				columns = Object.values(this.table.columns) as unknown as C
+
+			let tagged = raw`SELECT * FROM ${sql(this.table.definition.name)}`
+
+			// tagged = pushTemplate(tagged)` ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(this.table.definition.name)}`
+			if (columns.length === 0) {
+				columns = Object.values(this.table.columns) as unknown as C;
 			}
 
-			let tagged = raw`SELECT ${sql.unsafe(columns.map(col => col.column).join(', '))} FROM ${sql(this.table.definition.name)}`
-
 			if (this.conditions != null && this.conditions.length > 0) {
-				tagged = combine(tagged, craftWhereString(this.conditions))
+				tagged = combine(tagged, craftWhereString(this.table, this.conditions))
 			}
 
 			if (this._orderBy.length > 0) {
@@ -185,7 +189,7 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 
 			const returns: SelectQueryReturn<FilteredTableDefinition<D, C>>[] = await this.sql(tagged.strings, ...tagged.values).values()
 
-			return returns.map(values => {
+			return (returns).map(values => {
 				return values.reduce((prev, curr, i) => {
 					prev[columns[i]?.key!] = curr;
 					return prev;
@@ -284,7 +288,7 @@ export class UpdateObject<D extends TableDefinition, C extends Column<D, ColumnK
 
 			let tagged = raw`UPDATE ${sql(this.table.definition.name)} SET ${sql(updateValues, ...this.columns.map(col => col?.column))}`
 
-			const whereString = craftWhereString(this.conditions);
+			const whereString = craftWhereString(this.table, this.conditions);
 
 			if (whereString.toString() != '') {
 				tagged = combine(tagged, whereString)
@@ -316,7 +320,7 @@ export class DeleteObject<D extends TableDefinition> implements DangerOperation 
 		try {
 			let tagged = raw`DELETE FROM ${sql(this.table.definition.name)}`
 
-			const whereString = craftWhereString(condition)
+			const whereString = craftWhereString(this.table, condition)
 
 			if (whereString.toString() != '') {
 				tagged = combine(tagged, whereString)

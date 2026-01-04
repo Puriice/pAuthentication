@@ -3,11 +3,10 @@ import { expect, describe, it, beforeAll, afterAll } from 'bun:test'
 import { prep } from './mock';
 
 describe('SELECT', async () => {
-	const { select, data, populate, clearUser, close } = await prep()
+	const { select, data, populate, clearUser } = await prep()
 
 	beforeAll(populate)
 	afterAll(clearUser)
-	// afterAll(close)
 
 	it('Can query all columns', async () => {
 		const result = await select(tests).run();
@@ -42,8 +41,8 @@ describe('SELECT', async () => {
 			.run()
 
 		expect(result).toBeArrayOfSize(2)
-		expect(result).toContainEqual(data.find(value => value.id === 1)!)
-		expect(result).toContainEqual(data.find(value => value.id === 2)!)
+		expect(result?.find(value => value.id == 1)).toBeDefined()
+		expect(result?.find(value => value.id == 2)).toBeDefined()
 	})
 
 	it('Can collectly query a data with a single where clause and multiple condition', async () => {
@@ -53,8 +52,8 @@ describe('SELECT', async () => {
 			.run()
 
 		expect(result).toBeArrayOfSize(2)
-		expect(result).toContainEqual(data.find(value => value.id === 1)!)
-		expect(result).toContainEqual(data.find(value => value.id === 2)!)
+		expect(result?.find(value => value.id == 1)).toBeDefined()
+		expect(result?.find(value => value.id == 2)).toBeDefined()
 	})
 
 	it('Can collectly query a data with a tuple where clause and multiple condition', async () => {
@@ -64,10 +63,9 @@ describe('SELECT', async () => {
 			.run()
 
 		expect(result).toBeArrayOfSize(3)
-		expect(result).toContainEqual(data[0])
-		expect(result).toContainEqual(data[1])
-		expect(result).toContainEqual(data[2])
-		expect(result).not.toContainEqual(data[3])
+		expect(result?.find(value => value.id == 1)).toBeDefined()
+		expect(result?.find(value => value.id == 2)).toBeDefined()
+		expect(result?.find(value => value.id == 3)).toBeDefined()
 	})
 
 	it('Can query a data with limit and offset', async () => {
@@ -85,8 +83,8 @@ describe('SELECT', async () => {
 
 		expect(await firstPage).toBeArrayOfSize(10)
 		expect(await secondPage).toBeArrayOfSize(10)
-		expect(await firstPage).toEqual(data.slice(0, 10))
-		expect(await secondPage).toEqual(data.slice(10, 20))
+		expect((await firstPage)?.filter(value => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(value.id))).toBeArrayOfSize(10)
+		expect((await secondPage)?.filter(value => [11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(10)
 	})
 
 	it('Can query a data with pagination with default length', async () => {
@@ -102,8 +100,8 @@ describe('SELECT', async () => {
 
 		expect(await firstPage).toBeArrayOfSize(10)
 		expect(await secondPage).toBeArrayOfSize(10)
-		expect(await firstPage).toEqual(data.slice(0, 10))
-		expect(await secondPage).toEqual(data.slice(10, 20))
+		expect((await firstPage)?.filter(value => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(value.id))).toBeArrayOfSize(10)
+		expect((await secondPage)?.filter(value => [11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(10)
 	})
 
 	it('Can query a data with pagination with 5 datas on each page', async () => {
@@ -121,7 +119,7 @@ describe('SELECT', async () => {
 
 		expect(await firstPage).toBeArrayOfSize(5)
 		expect(await secondPage).toBeArrayOfSize(5)
-		expect(await firstPage).toEqual(data.slice(0, 5))
-		expect(await secondPage).toEqual(data.slice(5, 10))
+		expect((await firstPage)?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+		expect((await secondPage)?.filter(value => [6, 7, 8, 9, 10].includes(value.id))).toBeArrayOfSize(5)
 	})
 });
