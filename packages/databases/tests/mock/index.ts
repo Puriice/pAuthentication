@@ -477,9 +477,7 @@ export async function prep() {
 			...data
 		)
 
-		if (result) {
-			console.log('Inserted completed')
-		} else {
+		if (!result) {
 			console.error('Insertion abort.')
 		}
 	}
