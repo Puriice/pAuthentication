@@ -16,7 +16,7 @@ export function use(tx: Bun.SQL = sql) {
 
 	function insert<D extends TableDefinition, C extends Column<D, ColumnKey<D>>[]>(table: Table<D>, ...columns: C) {
 		if (columns.length == 0) {
-			return new InserObject(tx, table, [...Object.values(table.columns)] as const)
+			return new InserObject(tx, table, [...Object.values(table.columns)] as C)
 		}
 
 		return new InserObject(tx, table, columns)
@@ -24,7 +24,7 @@ export function use(tx: Bun.SQL = sql) {
 
 	function update<D extends TableDefinition, C extends Column<D, ColumnKey<D>>[]>(table: Table<D>, ...columns: C) {
 		if (columns.length == 0) {
-			return new UpdateObject(tx, table, [...Object.values(table.columns)] as const)
+			return new UpdateObject(tx, table, [...Object.values(table.columns)] as C)
 		}
 
 		return new UpdateObject(tx, table, columns);
