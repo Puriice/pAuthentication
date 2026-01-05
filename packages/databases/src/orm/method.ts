@@ -281,18 +281,7 @@ export class UpdateObject<D extends TableDefinition, C extends Column<D, ColumnK
 		if (values.length == 0) return;
 
 		try {
-			const updateValues = values.map(value => {
-				return Object.entries(value).reduce((prev, [key, value]) => {
-					if (value instanceof Date) {
-						value = value.toISOString().slice(0, 10)
-					}
-
-					prev[key] = value;
-
-					return prev;
-				}, {} as Record<string, unknown>)
-			})
-
+			const updateValues = parseValue(this.table, values)
 
 			let tagged = raw`UPDATE ${sql(this.table.definition.name)} SET ${sql(updateValues, ...this.columns.map(col => col?.column))}`
 
