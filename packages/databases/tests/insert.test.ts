@@ -1,8 +1,6 @@
 import { afterEach, describe, expect, it } from "bun:test"
 import { tests } from "../src/orm/tables"
 import { prep } from "./mock";
-import type { Row } from "../types";
-import type { testsTable } from "../src/tables";
 
 function filterColumns(result: unknown, blacklistKeys = ['id', 'createAt', 'lastModified']) {
 	if (typeof result !== "object" || result == null) return {};
@@ -21,7 +19,7 @@ describe('INSERT', async () => {
 
 	afterEach(clearUser)
 
-	it('Could insert a value with every column to the table', async () => {
+	it('inserts a single row including all table columns', async () => {
 		const insertQuery = insert(tests).run(data[0])
 
 		await insertQuery;
@@ -32,7 +30,7 @@ describe('INSERT', async () => {
 		expect((await result)?.[0]?.id).toBe(data[0].id)
 	});
 
-	it('Could insert a value with specific columns to the table', async () => {
+	it('inserts a single row with only the specified columns and sets others to NULL', async () => {
 		const insertQuery = insert(tests, tests.columns.id).run(data[0])
 
 		await insertQuery;
@@ -49,7 +47,7 @@ describe('INSERT', async () => {
 		expect(Object.values(filteredResult).every(value => value == null)).toBeTrue()
 	});
 
-	it('Could insert multiple values with every columns to the table', async () => {
+	it('inserts multiple rows including all table columns in a single operation', async () => {
 		const insertQuery = insert(tests).run(data[0], data[1], data[2])
 
 		await insertQuery;
@@ -62,7 +60,7 @@ describe('INSERT', async () => {
 		expect((await result)?.[2]?.id).toBe(data[2].id)
 	});
 
-	it('Could insert multiple values with specific columns to the table', async () => {
+	it('inserts multiple rows with only the specified columns and sets others to NULL', async () => {
 		const insertQuery = insert(tests, tests.columns.id).run(data[0], data[1], data[2])
 
 		await insertQuery;
