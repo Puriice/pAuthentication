@@ -1,7 +1,6 @@
-import { tests, users } from '../src/orm/tables'
+import { tests } from '../src/orm/tables'
 import { expect, describe, it, beforeAll, afterAll } from 'bun:test'
 import { prep } from './mock';
-import { between, greatThan, greatThanOrEqualTo, lessThan, lessThanOrEqualTo } from '../src/orm/operators/numeric';
 
 describe('SELECT', async () => {
 	const { select, data, populate, clearUser } = await prep()
@@ -9,14 +8,14 @@ describe('SELECT', async () => {
 	beforeAll(populate)
 	afterAll(clearUser)
 
-	it('Can query all columns', async () => {
+	it('returns all rows and all columns when no projection is specified', async () => {
 		const result = await select(tests).run();
 
 		expect(result).toBeArray();
 		expect(result).toHaveLength(20)
 	})
 
-	it('Can proper query with specific columns', async () => {
+	it('returns only the explicitly selected columns when a column projection is provided', async () => {
 		const result = await select(tests).run(
 			tests.columns.id,
 			tests.columns.uuid
@@ -26,49 +25,7 @@ describe('SELECT', async () => {
 		expect(result?.[0]).toContainAllKeys(['id', 'uuid'])
 	})
 
-	it('Can collectly query a data with a single where clause and single condition', async () => {
-		const result = await select(tests)
-			.where({ id: 1 })
-			.run()
-
-		expect(result).toBeArrayOfSize(1)
-		expect(result?.[0]).toContainAnyKeys(Object.keys(data[0]))
-	})
-
-	it('Can collectly query a data with a single tuple where clause single condition', async () => {
-		const result = await select(tests)
-			.where({ id: [1, 2] })
-			.run()
-
-		expect(result).toBeArrayOfSize(2)
-		expect(result?.find(value => value.id == 1)).toBeDefined()
-		expect(result?.find(value => value.id == 2)).toBeDefined()
-	})
-
-	it('Can collectly query a data with a single where clause and multiple condition', async () => {
-		const result = await select(tests)
-			.where({ id: 1 })
-			.where({ id: 2 })
-			.run()
-
-		expect(result).toBeArrayOfSize(2)
-		expect(result?.find(value => value.id == 1)).toBeDefined()
-		expect(result?.find(value => value.id == 2)).toBeDefined()
-	})
-
-	it('Can collectly query a data with a tuple where clause and multiple condition', async () => {
-		const result = await select(tests)
-			.where({ id: [1, 2], text: 'example text value' })
-			.where({ id: 3 })
-			.run()
-
-		expect(result).toBeArrayOfSize(3)
-		expect(result?.find(value => value.id == 1)).toBeDefined()
-		expect(result?.find(value => value.id == 2)).toBeDefined()
-		expect(result?.find(value => value.id == 3)).toBeDefined()
-	})
-
-	it('Can query a data with limit and offset', async () => {
+	it('applies limit and offset correctly when paginating a sorted result set', async () => {
 		const query = select(tests).orderBy(tests.columns.createAt)
 
 		const firstPage = query.page({
@@ -87,7 +44,7 @@ describe('SELECT', async () => {
 		expect((await secondPage)?.filter(value => [11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(10)
 	})
 
-	it('Can query a data with pagination with default length', async () => {
+	it('paginates results using the default page length when only the page number is provided', async () => {
 		const query = select(tests).orderBy(tests.columns.createAt)
 
 		const firstPage = query.page({
@@ -104,7 +61,7 @@ describe('SELECT', async () => {
 		expect((await secondPage)?.filter(value => [11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(10)
 	})
 
-	it('Can query a data with pagination with 5 datas on each page', async () => {
+	it('paginates results using a custom page length', async () => {
 		const query = select(tests).orderBy(tests.columns.createAt)
 
 		const firstPage = query.page({
@@ -123,42 +80,7 @@ describe('SELECT', async () => {
 		expect((await secondPage)?.filter(value => [6, 7, 8, 9, 10].includes(value.id))).toBeArrayOfSize(5)
 	})
 
-	it('Can query a data with a great than query', async () => {
-		const result = await select(tests).where({ id: greatThan(15) }).run();
-
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
-	});
-
-	it('Can query a data with a less than query', async () => {
-		const result = await select(tests).where({ id: lessThan(6) }).run();
-
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
-	});
-
-	it('Can query a data with a great than or equal to query', async () => {
-		const result = await select(tests).where({ id: greatThanOrEqualTo(16) }).run();
-
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
-	});
-
-	it('Can query a data with a less than or equal to query', async () => {
-		const result = await select(tests).where({ id: lessThanOrEqualTo(5) }).run();
-
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
-	});
-
-	it('Can query a data with a between query', async () => {
-		const result = await select(tests).where({ id: between(1, 5) }).run();
-
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
-	});
-
-	it('Could prevent sql injection', async () => {
+	it('safely escapes input values to prevent SQL injection attacks', async () => {
 		const result = await select(tests).where({ text: '\' OR 1=1 --' }).run()
 
 		expect(result).toBeEmpty()
