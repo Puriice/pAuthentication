@@ -7,7 +7,7 @@ import type { testsTable } from "../../src/tables";
 export async function prep() {
 	const pg = createSQL();
 
-	const { select, insert, update, del } = use(pg)
+	const { select, insert, update, del, count } = use(pg)
 
 	const data = [
 		{
@@ -491,6 +491,7 @@ export async function prep() {
 		insert,
 		update,
 		del,
+		count,
 		data,
 		populate,
 		clearUser,
