@@ -481,7 +481,7 @@ export async function prep() {
 			console.error('Insertion abort.')
 		}
 	}
-	async function clearUser() {
+	async function clearTable() {
 		await del(tests).danger().run();
 	}
 
@@ -494,7 +494,7 @@ export async function prep() {
 		count,
 		data,
 		populate,
-		clearUser,
+		clearTable,
 		close: pg.close
 	}
 }

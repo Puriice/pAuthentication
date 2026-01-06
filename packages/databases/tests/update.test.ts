@@ -3,10 +3,10 @@ import { prep } from "./mock"
 import { tests } from "../src/orm/tables"
 
 describe('UPDATE', async () => {
-	const { select, update, populate, clearUser } = await prep()
+	const { select, update, populate, clearTable } = await prep()
 
 	beforeEach(populate)
-	afterEach(clearUser)
+	afterEach(clearTable)
 
 	const updateValue = {
 		id: 99,

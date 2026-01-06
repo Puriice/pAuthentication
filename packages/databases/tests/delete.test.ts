@@ -3,10 +3,10 @@ import { prep } from "./mock"
 import { tests } from "../src/orm/tables"
 
 describe('DELETE', async () => {
-	const { select, count, del, populate, clearUser } = await prep()
+	const { select, count, del, populate, clearTable } = await prep()
 
 	beforeEach(populate)
-	afterEach(clearUser)
+	afterEach(clearTable)
 
 	it('deletes a single record by an exact match on a single field using one where clause', async () => {
 		const deleteResult = del(tests).run({ id: 1 })

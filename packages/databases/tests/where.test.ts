@@ -4,10 +4,10 @@ import { tests } from "../src/orm/tables";
 import { greatThan, lessThan, greatThanOrEqualTo, lessThanOrEqualTo, between } from "../src/orm/operators/numeric";
 
 describe('WHERE', async () => {
-	const { select, data, populate, clearUser } = await prep()
+	const { select, data, populate, clearTable } = await prep()
 
 	beforeAll(populate)
-	afterAll(clearUser)
+	afterAll(clearTable)
 
 	it('filters records by an exact match on a single field using one WHERE clause', async () => {
 		const result = await select(tests)

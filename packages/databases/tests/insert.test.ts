@@ -15,9 +15,9 @@ function filterColumns(result: unknown, blacklistKeys = ['id', 'createAt', 'last
 }
 
 describe('INSERT', async () => {
-	const { select, insert, data, clearUser } = await prep()
+	const { select, insert, data, clearTable } = await prep()
 
-	afterEach(clearUser)
+	afterEach(clearTable)
 
 	it('inserts a single row including all table columns', async () => {
 		const insertQuery = insert(tests).run(data[0])

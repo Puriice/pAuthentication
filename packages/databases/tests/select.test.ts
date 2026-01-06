@@ -3,10 +3,10 @@ import { expect, describe, it, beforeAll, afterAll } from 'bun:test'
 import { prep } from './mock';
 
 describe('SELECT', async () => {
-	const { select, data, populate, clearUser } = await prep()
+	const { select, data, populate, clearTable } = await prep()
 
 	beforeAll(populate)
-	afterAll(clearUser)
+	afterAll(clearTable)
 
 	it('returns all rows and all columns when no projection is specified', async () => {
 		const result = await select(tests).run();
