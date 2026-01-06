@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { prep } from "./mock";
 import { tests } from "../src/orm/tables";
 import { greatThan, lessThan, greatThanOrEqualTo, lessThanOrEqualTo, between } from "../src/orm/operators/numeric";
+import { not } from "../src/orm/operators";
 
 describe('WHERE', async () => {
 	const { select, data, populate, clearTable } = await prep()
@@ -51,38 +52,77 @@ describe('WHERE', async () => {
 		expect(result?.find(value => value.id == 3)).toBeDefined()
 	})
 
-	it('filters records using a greater-than comparison operator', async () => {
-		const result = await select(tests).where({ id: greatThan(15) }).run();
+	describe('numeric comparison', () => {
 
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
+		it('filters records using a greater-than comparison operator', async () => {
+			const result = await select(tests).where({ id: greatThan(15) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
+		});
+
+		it('filters records using a less-than comparison operator', async () => {
+			const result = await select(tests).where({ id: lessThan(6) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+		});
+
+		it('filters records using a greater-than-or-equal-to comparison operator', async () => {
+			const result = await select(tests).where({ id: greatThanOrEqualTo(16) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
+		});
+
+		it('filters records using a less-than-or-equal-to comparison operator', async () => {
+			const result = await select(tests).where({ id: lessThanOrEqualTo(5) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+		});
+
+		it('filters records using a between (inclusive range) comparison operator', async () => {
+			const result = await select(tests).where({ id: between(1, 5) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+		});
+
+		it('filters records using a not-greater-than comparison operator', async () => {
+			const result = await select(tests).where({ id: not(greatThan(5)) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+		});
+
+		it('filters records using a not-less-than comparison operator', async () => {
+			const result = await select(tests).where({ id: not(lessThan(16)) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
+		});
+
+		it('filters records using a not-greater-than-or-equal-to comparison operator', async () => {
+			const result = await select(tests).where({ id: not(greatThanOrEqualTo(6)) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+		});
+
+		it('filters records using a not-less-than-or-equal-to comparison operator', async () => {
+			const result = await select(tests).where({ id: not(lessThanOrEqualTo(15)) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
+		});
+
+		it('filters records using a not-between (inclusive range) comparison operator', async () => {
+			const result = await select(tests).where({ id: not(between(6, 20)) }).run();
+
+			expect(result).toBeArrayOfSize(5)
+			expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
+		});
 	});
 
-	it('filters records using a less-than comparison operator', async () => {
-		const result = await select(tests).where({ id: lessThan(6) }).run();
-
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
-	});
-
-	it('filters records using a greater-than-or-equal-to comparison operator', async () => {
-		const result = await select(tests).where({ id: greatThanOrEqualTo(16) }).run();
-
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [16, 17, 18, 19, 20].includes(value.id))).toBeArrayOfSize(5)
-	});
-
-	it('filters records using a less-than-or-equal-to comparison operator', async () => {
-		const result = await select(tests).where({ id: lessThanOrEqualTo(5) }).run();
-
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
-	});
-
-	it('filters records using a between (inclusive range) comparison operator', async () => {
-		const result = await select(tests).where({ id: between(1, 5) }).run();
-
-		expect(result).toBeArrayOfSize(5)
-		expect(result?.filter(value => [1, 2, 3, 4, 5].includes(value.id))).toBeArrayOfSize(5)
-	});
 });
