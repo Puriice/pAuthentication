@@ -1,5 +1,5 @@
 import type { numeric } from "../../../types/operator"
-import { BetweenOperation, ComparisonOperation } from "./numeric.class"
+import { BetweenOperation, ComparisonOperation } from "./class"
 
 export function greatThan<T extends numeric>(value: T): ComparisonOperation<T> {
 	return new ComparisonOperation(value, '>')

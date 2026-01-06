@@ -2,7 +2,7 @@ import { sql } from "bun";
 import { combine, pushTemplate, raw } from 'literals'
 import type { Column, ColumnKey, FilteredTableDefinition, Row, Rows, SelectQueryReturn, Table, TableDefinition, TableDefinitionWithoutSystemColumns } from "../../types"
 import type { numeric, NumericOperation } from "../../types/operator";
-import { BetweenOperation, ComparisonOperation } from "./operators/numeric.class";
+import { BetweenOperation, ComparisonOperation, NotOperation } from "./operators/class";
 import { IntegerArray, StringArray } from "../tables";
 
 type NumericCondition<T> = T extends numeric ? NumericOperation<T> : never
@@ -57,6 +57,14 @@ function craftWhereString<D extends TableDefinition>(table: Table<D>, conditions
 
 			if (!column) return;
 
+			let close = false;
+
+			if (values instanceof NotOperation) {
+				tagged = pushTemplate(tagged)` NOT (`
+				values = values.operation;
+				close = true;
+			}
+
 			if (Array.isArray(values)) {
 				tagged = pushTemplate(tagged)` ${sql`${sql(column)} IN ${sql(values)}`}`
 			} else if (values instanceof ComparisonOperation) {
@@ -65,6 +73,10 @@ function craftWhereString<D extends TableDefinition>(table: Table<D>, conditions
 				tagged = pushTemplate(tagged)` ${sql`${sql(column)} BETWEEN ${values.from} AND ${values.to}`}`
 			} else {
 				tagged = pushTemplate(tagged)` ${sql`${sql(column)} = ${values}`}`
+			}
+
+			if (close) {
+				tagged = pushTemplate(tagged)` )`
 			}
 
 			if (conditionEntries[i + 1] != undefined) {
