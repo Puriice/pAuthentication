@@ -30,6 +30,7 @@ export async function prep() {
 			bytea: new Uint8Array([1, 2, 3, 4]),
 			// intArray: [1, 2, 3],
 			textArray: ["alpha", "beta", "gamma"],
+			null: null,
 			createAt: new Date("2024-01-01T10:30:00Z"),
 			lastModified: new Date("2024-01-01T10:30:00Z")
 		},
@@ -53,6 +54,7 @@ export async function prep() {
 			bytea: new Uint8Array([255, 0, 127]),
 			// intArray: [],
 			textArray: ["single"],
+			null: null,
 			createAt: new Date("2023-12-31T23:59:59Z"),
 			lastModified: new Date("2023-12-31T23:59:59Z")
 		},
@@ -76,6 +78,7 @@ export async function prep() {
 			bytea: new Uint8Array([3, 3, 3]),
 			// intArray: [3],
 			textArray: ["three"],
+			null: null,
 			createAt: new Date("2024-02-01T08:00:00Z"),
 			lastModified: new Date("2024-02-01T08:00:00Z")
 		},
@@ -99,6 +102,7 @@ export async function prep() {
 			bytea: new Uint8Array([4]),
 			// intArray: [4, 4],
 			textArray: ["four"],
+			null: null,
 			createAt: new Date("2024-02-02T09:00:00Z"),
 			lastModified: new Date("2024-02-02T09:00:00Z")
 		},
@@ -122,6 +126,7 @@ export async function prep() {
 			bytea: new Uint8Array([5]),
 			// intArray: [5],
 			textArray: ["five"],
+			null: null,
 			createAt: new Date("2024-02-03T10:00:00Z"),
 			lastModified: new Date("2024-02-03T10:00:00Z")
 		},
@@ -145,6 +150,7 @@ export async function prep() {
 			bytea: new Uint8Array([6]),
 			// intArray: [6],
 			textArray: ["six"],
+			null: null,
 			createAt: new Date("2024-02-04T11:00:00Z"),
 			lastModified: new Date("2024-02-04T11:00:00Z")
 		},
@@ -168,6 +174,7 @@ export async function prep() {
 			bytea: new Uint8Array([7]),
 			// intArray: [7],
 			textArray: ["seven"],
+			null: null,
 			createAt: new Date("2024-02-05T12:00:00Z"),
 			lastModified: new Date("2024-02-05T12:00:00Z")
 		},
@@ -191,6 +198,7 @@ export async function prep() {
 			bytea: new Uint8Array([8]),
 			// intArray: [8],
 			textArray: ["eight"],
+			null: null,
 			createAt: new Date("2024-02-06T13:00:00Z"),
 			lastModified: new Date("2024-02-06T13:00:00Z")
 		},
@@ -214,6 +222,7 @@ export async function prep() {
 			bytea: new Uint8Array([9]),
 			// intArray: [9],
 			textArray: ["nine"],
+			null: null,
 			createAt: new Date("2024-02-07T14:00:00Z"),
 			lastModified: new Date("2024-02-07T14:00:00Z")
 		},
@@ -237,6 +246,7 @@ export async function prep() {
 			bytea: new Uint8Array([10]),
 			// intArray: [10],
 			textArray: ["ten"],
+			null: null,
 			createAt: new Date("2024-02-08T15:00:00Z"),
 			lastModified: new Date("2024-02-08T15:00:00Z")
 		},
@@ -260,6 +270,7 @@ export async function prep() {
 			bytea: new Uint8Array([11]),
 			// intArray: [11],
 			textArray: ["eleven"],
+			null: 1,
 			createAt: new Date("2024-02-09T16:00:00Z"),
 			lastModified: new Date("2024-02-09T16:00:00Z")
 		},
@@ -283,6 +294,7 @@ export async function prep() {
 			bytea: new Uint8Array([12]),
 			// intArray: [12],
 			textArray: ["twelve"],
+			null: 1,
 			createAt: new Date("2024-02-10T17:00:00Z"),
 			lastModified: new Date("2024-02-10T17:00:00Z")
 		},
@@ -306,6 +318,7 @@ export async function prep() {
 			bytea: new Uint8Array([13]),
 			// intArray: [13],
 			textArray: ["thirteen"],
+			null: 1,
 			createAt: new Date("2024-02-11T18:00:00Z"),
 			lastModified: new Date("2024-02-11T18:00:00Z")
 		},
@@ -329,6 +342,7 @@ export async function prep() {
 			bytea: new Uint8Array([14]),
 			// intArray: [14],
 			textArray: ["fourteen"],
+			null: 1,
 			createAt: new Date("2024-02-12T19:00:00Z"),
 			lastModified: new Date("2024-02-12T19:00:00Z")
 		},
@@ -352,6 +366,7 @@ export async function prep() {
 			bytea: new Uint8Array([15]),
 			// intArray: [15],
 			textArray: ["fifteen"],
+			null: 1,
 			createAt: new Date("2024-02-13T20:00:00Z"),
 			lastModified: new Date("2024-02-13T20:00:00Z")
 		},
@@ -375,6 +390,7 @@ export async function prep() {
 			bytea: new Uint8Array([16]),
 			// intArray: [16],
 			textArray: ["sixteen"],
+			null: 1,
 			createAt: new Date("2024-02-14T21:00:00Z"),
 			lastModified: new Date("2024-02-14T21:00:00Z")
 		},
@@ -398,6 +414,7 @@ export async function prep() {
 			bytea: new Uint8Array([17]),
 			// intArray: [17],
 			textArray: ["seventeen"],
+			null: 1,
 			createAt: new Date("2024-02-15T22:00:00Z"),
 			lastModified: new Date("2024-02-15T22:00:00Z")
 		},
@@ -421,6 +438,7 @@ export async function prep() {
 			bytea: new Uint8Array([18]),
 			// intArray: [18],
 			textArray: ["eighteen"],
+			null: 1,
 			createAt: new Date("2024-02-16T23:00:00Z"),
 			lastModified: new Date("2024-02-16T23:00:00Z")
 		},
@@ -444,6 +462,7 @@ export async function prep() {
 			bytea: new Uint8Array([19]),
 			// intArray: [19],
 			textArray: ["nineteen"],
+			null: 1,
 			createAt: new Date("2024-02-17T00:00:00Z"),
 			lastModified: new Date("2024-02-17T00:00:00Z")
 		},
@@ -467,6 +486,7 @@ export async function prep() {
 			bytea: new Uint8Array([20]),
 			// intArray: [20],
 			textArray: ["twenty"],
+			null: 1,
 			createAt: new Date("2024-02-18T01:00:00Z"),
 			lastModified: new Date("2024-02-18T01:00:00Z")
 		}

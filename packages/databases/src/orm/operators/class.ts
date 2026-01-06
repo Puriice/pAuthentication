@@ -3,7 +3,7 @@ import type { numeric } from "../../../types/operator";
 export interface Operation { }
 
 export class NotOperation<T extends Operation> {
-	constructor(public operation: T) { }
+	constructor(public operation: T | null) { }
 }
 
 export class ComparisonOperation<T extends numeric> implements Operation {

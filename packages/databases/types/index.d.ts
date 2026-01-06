@@ -1,10 +1,11 @@
+
 const x = typeof 1
 
 export type Typeof = typeof x;
 
 export interface TableDefinition {
 	name: string;
-	columns: Record<string, { name: string; type: any }>;
+	columns: Record<string, { name: string; type: any, nullable?: boolean }>;
 	linkedTables?: Record<string, TableDefinition>;
 }
 
@@ -43,7 +44,7 @@ export type ColumnMaps<D extends TableDefinition> = {
 /* --- Row / Rows --- */
 
 export type Row<D extends TableDefinition> = {
-	[K in keyof D['columns']]: D['columns'][K]['type'];
+	[K in keyof D['columns']]: D['columns'][K]['nullable'] extends true ? D['columns'][K]['type'] | null : D['columns'][K]['type'];
 };
 
 export type Rows<D extends TableDefinition> = Row<D>[];

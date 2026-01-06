@@ -420,6 +420,12 @@ export const testsTable = {
 			type: ReturnType.stringArray
 		},
 
+		null: {
+			name: 'col_null_or_number',
+			type: ReturnType.number,
+			nullable: true
+		},
+
 		// Metadata
 		createAt: {
 			name: 'created_at',

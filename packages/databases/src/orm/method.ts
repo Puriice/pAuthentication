@@ -67,8 +67,11 @@ function craftWhereString<D extends TableDefinition>(table: Table<D>, conditions
 
 			if (Array.isArray(values)) {
 				tagged = pushTemplate(tagged)` ${sql`${sql(column)} IN ${sql(values)}`}`
+			} else if (values === null) {
+				tagged = pushTemplate(tagged)` ${sql`${sql(column)} IS NULL`}`
 			} else if (values instanceof ComparisonOperation) {
 				tagged = pushTemplate(tagged)` ${sql`${sql(column)} ${sql.unsafe(values.operator)} ${values.value}`}`
+
 			} else if (values instanceof BetweenOperation) {
 				tagged = pushTemplate(tagged)` ${sql`${sql(column)} BETWEEN ${values.from} AND ${values.to}`}`
 			} else {
@@ -201,7 +204,6 @@ export class SelectObject<D extends TableDefinition> implements WhereableObject<
 					tagged = pushTemplate(tagged)` OFFSET ${this._offset}`
 				}
 			}
-
 
 			if (this.isForUpdate) {
 				tagged = pushTemplate(tagged)` FOR UPDATE`

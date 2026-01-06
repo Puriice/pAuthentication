@@ -125,4 +125,19 @@ describe('WHERE', async () => {
 		});
 	});
 
+	describe('existance', () => {
+		it('filters records where the column value IS NULL', async () => {
+			const result = await select(tests).where({ null: null }).run();
+
+			expect(result).toBeArrayOfSize(10)
+			expect(result?.every(value => value.null === null)).toBeTrue()
+		});
+
+		it('filters records where the column value IS NOT NULL', async () => {
+			const result = await select(tests).where({ null: not(null) }).run();
+
+			expect(result).toBeArrayOfSize(10)
+			expect(result?.every(value => typeof value.null === 'number')).toBeTrue()
+		});
+	});
 });
