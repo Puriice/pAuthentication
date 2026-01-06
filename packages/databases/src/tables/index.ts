@@ -57,7 +57,8 @@ export const usersTable = {
 		},
 		birthday: {
 			name: 'birthday',
-			type: ReturnType.date
+			type: ReturnType.date,
+			nullable: true
 		},
 		createAt: {
 			name: 'createat',
@@ -150,11 +151,13 @@ export const projectSettingsTable = {
 		},
 		redirectURL: {
 			name: 'redirecturl',
-			type: ReturnType.string
+			type: ReturnType.string,
+			nullable: true
 		},
 		credential: {
 			name: 'credential',
-			type: ReturnType.string
+			type: ReturnType.string,
+			nullable: true
 		},
 		allowAlias: {
 			name: 'allowalias',
@@ -208,15 +211,17 @@ export const privilegesTable = {
 		},
 		description: {
 			name: 'description',
-			type: ReturnType.string
+			type: ReturnType.string,
+			nullable: true
 		},
 		group: {
 			name: 'privilegegroup',
-			type: ReturnType.string
+			type: ReturnType.string,
+			nullable: true
 		},
 		order: {
 			name: 'priorityorder',
-			type: ReturnType.number
+			type: ReturnType.number,
 		}
 	},
 	linkedTables: {
@@ -286,7 +291,8 @@ export const aliasesTable = {
 		},
 		fullname: {
 			name: 'fullname',
-			type: ReturnType.string
+			type: ReturnType.string,
+			nullable: true
 		}
 	},
 	linkedTables: {
