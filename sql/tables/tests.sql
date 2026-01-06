@@ -35,9 +35,11 @@ CREATE TABLE tests (
     col_bytea           BYTEA,
 
     -- Arrays
-    col_int_array       INTEGER[],
+    -- col_int_array       INTEGER[],
     col_text_array      TEXT[],
 
+	-- Maybe null;
+	col_null_or_number	INTEGER,
     -- Audit / metadata
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
