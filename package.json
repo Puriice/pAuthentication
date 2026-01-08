@@ -1,19 +1,21 @@
 {
-	"name": "pauthentication",
-	"module": "index.ts",
-	"type": "module",
-	"private": true,
-	"workspaces": [
-		"shared/*",
-		"apps/*"
-	],
-	"scripts": {
-		"install": "bun install"
-	},
-	"devDependencies": {
-		"@types/bun": "latest"
-	},
-	"peerDependencies": {
-		"typescript": "^5"
-	}
+  "name": "pauthentication",
+  "type": "module",
+  "private": true,
+
+  "workspaces": [
+    "packages/*"
+  ],
+
+  "scripts": {
+    "install": "bun install"
+  },
+
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+
+  "peerDependencies": {
+    "typescript": "^5"
+  }
 }

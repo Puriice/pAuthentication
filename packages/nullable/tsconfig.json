@@ -1,19 +1,20 @@
 {
   "compilerOptions": {
-    // Environment setup & latest features
+    // Environment setup
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "target": "ESNext",
-    "module": "Preserve",
-    "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "allowJs": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
 
-    // Project structure (ที่เพื่อนเน้นย้ำ)
-    "rootDir": "./src",
+    // Bun
+    "types": ["bun-types"],
+
+    // Project structure
+    "rootDir": ".",
     "baseUrl": ".",
 
-    // Bundler mode
-    "moduleResolution": "bundler",
+    // TS + Bundler friendly
+    "allowJs": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
@@ -25,15 +26,14 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
 
-    // Some stricter flags
+    // Relaxed
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "tests/**/*"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

@@ -1,0 +1,7 @@
+{
+  "name": "@workspace/demo",
+  "type": "module",
+  "dependencies": {
+    "@workspace/nullable": "workspace:*"
+  }
+}
