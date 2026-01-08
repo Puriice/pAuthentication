@@ -1,19 +1,13 @@
-import type { ComparisonOperation } from "../src/orm/operators/numeric";
+import type { BetweenOperation, ComparisonOperation, LikeOperation, NotOperation } from "../src/orm/operators/class";
 
 type numeric = number | bigint
 
-interface Operator {
-	operator: readonly string;
-}
-
-interface ComparisonOperation<T extends numeric> extends Operator {
-	value: T
-}
-
-interface BetweenOperation<T extends numeric> extends Operator {
-	from: T;
-	to: T;
-}
+export interface Operation { }
 
 type NumericOperation<T extends numeric> = ComparisonOperation<T>
 	| BetweenOperation<T>
+
+type StringOperation = LikeOperation
+
+type X<T extends number | bigint> =
+	{ a: T } | { b: T };

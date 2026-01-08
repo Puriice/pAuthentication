@@ -43,7 +43,7 @@ export async function prep() {
 			real: -1.5,
 			double: 0.000001,
 			varchar: "another row",
-			text: "example text value",
+			text: "Example text value",
 			boolean: false,
 			date: new Date("2000-01-01"),
 			timestamp: new Date("2023-12-31T23:59:59"),

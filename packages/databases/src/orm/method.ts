@@ -1,14 +1,18 @@
 import { sql } from "bun";
 import { combine, pushTemplate, raw } from 'literals'
 import type { Column, ColumnKey, FilteredTableDefinition, Row, Rows, SelectQueryReturn, Table, TableDefinition, TableDefinitionWithoutSystemColumns } from "../../types"
-import type { numeric, NumericOperation } from "../../types/operator";
-import { BetweenOperation, ComparisonOperation, NotOperation } from "./operators/class";
+import type { numeric, NumericOperation, StringOperation } from "../../types/operator";
+import { BetweenOperation, ComparisonOperation, LikeOperation, NotOperation } from "./operators/class";
 import { IntegerArray, StringArray } from "../tables";
 
-type NumericCondition<T> = T extends numeric ? NumericOperation<T> : never
+type NumericCondition<T> = T extends numeric ? NumericOperation<T> | NotOperation<NumericOperation<T>> : never
+
+type StringCondition<T> = T extends string ? StringOperation | NotOperation<StringOperation> : never
+
+type NullCondition<T> = T extends true ? NotOperation<null> | null : never
 
 type WhereCondition<D extends TableDefinition> = Partial<{
-	[C in keyof D['columns']]: D['columns'][C]['type'][] | D['columns'][C]['type'] | NumericCondition<D['columns'][C]['type']>
+	[C in keyof D['columns']]: D['columns'][C]['type'][] | D['columns'][C]['type'] | (NumericCondition<D['columns'][C]['type']>) | (StringCondition<D['columns'][C]['type']>) | NullCondition<D['columns'][C]['nullable']>
 }>
 
 interface WhereableObject<D extends TableDefinition> {
@@ -69,6 +73,12 @@ function craftWhereString<D extends TableDefinition>(table: Table<D>, conditions
 				tagged = pushTemplate(tagged)` ${sql`${sql(column)} IN ${sql(values)}`}`
 			} else if (values === null) {
 				tagged = pushTemplate(tagged)` ${sql`${sql(column)} IS NULL`}`
+			} else if (values instanceof LikeOperation) {
+				if (values.caseSensitive) {
+					tagged = pushTemplate(tagged)` ${sql`${sql(column)} LIKE ${values.value}`}`
+				} else {
+					tagged = pushTemplate(tagged)` ${sql`${sql(column)} ILIKE ${values.value}`}`
+				}
 			} else if (values instanceof ComparisonOperation) {
 				tagged = pushTemplate(tagged)` ${sql`${sql(column)} ${sql.unsafe(values.operator)} ${values.value}`}`
 

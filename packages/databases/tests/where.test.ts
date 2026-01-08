@@ -3,6 +3,7 @@ import { prep } from "./mock";
 import { tests } from "../src/orm/tables";
 import { greatThan, lessThan, greatThanOrEqualTo, lessThanOrEqualTo, between } from "../src/orm/operators/numeric";
 import { not } from "../src/orm/operators";
+import { ilike, like } from "../src/orm/operators/string";
 
 describe('WHERE', async () => {
 	const { select, data, populate, clearTable } = await prep()
@@ -44,13 +45,29 @@ describe('WHERE', async () => {
 		const result = await select(tests)
 			.where({ id: [1, 2], text: 'example text value' })
 			.where({ id: 3 })
+			.orderBy(tests.columns.id)
 			.run()
 
-		expect(result).toBeArrayOfSize(3)
-		expect(result?.find(value => value.id == 1)).toBeDefined()
-		expect(result?.find(value => value.id == 2)).toBeDefined()
-		expect(result?.find(value => value.id == 3)).toBeDefined()
+		expect(result).toBeArrayOfSize(2)
+		expect(result?.[0]?.id).toBe(1)
+		expect(result?.[1]?.id).toBe(3)
 	})
+
+	describe('existance', () => {
+		it('filters records where the column value IS NULL', async () => {
+			const result = await select(tests).where({ null: null }).run();
+
+			expect(result).toBeArrayOfSize(10)
+			expect(result?.every(value => value.null === null)).toBeTrue()
+		});
+
+		it('filters records where the column value IS NOT NULL', async () => {
+			const result = await select(tests).where({ null: not(null) }).run();
+
+			expect(result).toBeArrayOfSize(10)
+			expect(result?.every(value => typeof value.null === 'number')).toBeTrue()
+		});
+	});
 
 	describe('numeric comparison', () => {
 
@@ -125,19 +142,35 @@ describe('WHERE', async () => {
 		});
 	});
 
-	describe('existance', () => {
-		it('filters records where the column value IS NULL', async () => {
-			const result = await select(tests).where({ null: null }).run();
+	describe('strings', () => {
+		it('filters records where the column value is starts with "Exa" (case-sensitive)', async () => {
+			const result = await select(tests).where({ text: like('Exa%') }).run();
 
-			expect(result).toBeArrayOfSize(10)
-			expect(result?.every(value => value.null === null)).toBeTrue()
+			expect(result).toBeArray()
+			expect(result?.every(row => row.text.startsWith('Exa'))).toBeTrue();
+			expect(result?.filter(row => row.text.startsWith('Exa')).length)
+				.toBe(result?.filter(row => row.text.toLowerCase().startsWith('exa')).length)
 		});
 
-		it('filters records where the column value IS NOT NULL', async () => {
-			const result = await select(tests).where({ null: not(null) }).run();
+		it('filters records where the column value is NOT starts with "Exa" (case-sensitive)', async () => {
+			const result = await select(tests).where({ text: not(like('Exa%')) }).run();
 
-			expect(result).toBeArrayOfSize(10)
-			expect(result?.every(value => typeof value.null === 'number')).toBeTrue()
+			expect(result).toBeArray()
+			expect(result?.some(row => row.text.startsWith('Exa'))).not.toBeTrue();
+		})
+
+		it('filters records where the column value is starts with "Exa" (case-insensitive)', async () => {
+			const result = await select(tests).where({ text: ilike('Exa%') }).run();
+
+			expect(result).toBeArray()
+			expect(result?.every(row => row.text.toLowerCase().startsWith('exa'))).toBeTrue();
 		});
+
+		it('filters records where the column value is NOT starts with "Exa" (case-insensitive)', async () => {
+			const result = await select(tests).where({ text: not(ilike('Exa%')) }).run();
+
+			expect(result).toBeArray()
+			expect(result?.some(row => row.text.toLowerCase().startsWith('exa'))).not.toBeTrue();
+		})
 	});
 });

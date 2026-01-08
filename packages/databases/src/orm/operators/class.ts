@@ -1,8 +1,6 @@
-import type { numeric } from "../../../types/operator";
+import type { numeric, Operation } from "../../../types/operator";
 
-export interface Operation { }
-
-export class NotOperation<T extends Operation> {
+export class NotOperation<T extends Operation | null> {
 	constructor(public operation: T | null) { }
 }
 
@@ -12,4 +10,8 @@ export class ComparisonOperation<T extends numeric> implements Operation {
 
 export class BetweenOperation<T extends numeric> implements Operation {
 	constructor(public from: T, public to: T) { }
+}
+
+export class LikeOperation implements Operation {
+	constructor(public value: string, public caseSensitive: boolean = true) { }
 }
