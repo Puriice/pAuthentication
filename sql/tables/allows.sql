@@ -1,0 +1,7 @@
+CREATE TABLE Allows (
+	RoleID				BIGINT NOT NULL,
+	PrivilegeID			BIGINT NOT NULL,
+	PRIMARY KEY(RoleID, PrivilegeID),
+	FOREIGN KEY(RoleID) REFERENCES Roles(ID),
+	FOREIGN KEY(PrivilegeID) REFERENCES Privileges(ID)
+);

@@ -141,3 +141,6 @@ vite.config.ts.timestamp-*
 #etc
 .DS_Store
 **/*.un~
+
+#demo packages 
+packages/demo/

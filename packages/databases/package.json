@@ -1,0 +1,41 @@
+{
+	"name": "databases",
+	"module": "src/index.ts",
+	"type": "module",
+	"private": true,
+	"dependencies": {
+		"literals": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5.9.3"
+	},
+	"exports": {
+		"./tables": {
+			"types": "./src/orm/tables.ts",
+			"default": "./src/orm/tables.ts"
+		},
+		"./definition": {
+			"types": "./src/tables/index.ts",
+			"default": "./src/tables/index.ts"
+		},
+		"./orm": {
+			"types": "./src/orm/index.ts",
+			"default": "./src/orm/index.ts"
+		},
+		"./operators": {
+			"types": "./src/orm/operators/index.ts",
+			"default": "./src/orm/operators/index.ts"
+		},
+		"./operators/numeric": {
+			"types": "./src/orm/operators/numeric.ts",
+			"default": "./src/orm/operators/numeric.ts"
+		},
+		"./operators/strings": {
+			"types": "./src/orm/operators/strings.ts",
+			"default": "./src/orm/operators/strings.ts"
+		}
+	}
+}
