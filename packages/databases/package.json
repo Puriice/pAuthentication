@@ -13,11 +13,29 @@
 		"typescript": "^5.9.3"
 	},
 	"exports": {
-		"tables": "./src/orm/tables.ts",
-		"definition": "./src/tables/index.ts",
-		"orm": "./src/orm/index.ts",
-		"operators": "./src/orm/operators/index.ts",
-		"operators/numeric": "./src/orm/operators/numeric.ts",
-		"operators/strings": "./src/orm/operators/strings.ts"
+		"./tables": {
+			"types": "./src/orm/tables.ts",
+			"default": "./src/orm/tables.ts"
+		},
+		"./definition": {
+			"types": "./src/tables/index.ts",
+			"default": "./src/tables/index.ts"
+		},
+		"./orm": {
+			"types": "./src/orm/index.ts",
+			"default": "./src/orm/index.ts"
+		},
+		"./operators": {
+			"types": "./src/orm/operators/index.ts",
+			"default": "./src/orm/operators/index.ts"
+		},
+		"./operators/numeric": {
+			"types": "./src/orm/operators/numeric.ts",
+			"default": "./src/orm/operators/numeric.ts"
+		},
+		"./operators/strings": {
+			"types": "./src/orm/operators/strings.ts",
+			"default": "./src/orm/operators/strings.ts"
+		}
 	}
 }
