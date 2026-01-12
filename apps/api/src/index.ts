@@ -8,6 +8,7 @@ const version = (version: number) => prefix(`/v${version}`,
 	new Elysia()
 		.decorate('version', version)
 		.get('/', ({ version }) => version)
+		.use(project)
 )
 
 const app = new Elysia()
