@@ -1,0 +1,13 @@
+CREATE TABLE roles (
+	ID				BIGINT NOT NULL,
+	project_id		UUID NOT NULL,
+	name			VARCHAR(255) NOT NULL,
+	priority_order	INT,
+	
+	create_at		TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_at 		TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+	PRIMARY KEY(ID),
+	UNIQUE(project_id, name)
+	FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
