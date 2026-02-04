@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE phones (
 	username		VARCHAR(255) NOT NULL,
 	priority_order	INT NOT NULL,
@@ -10,3 +11,6 @@ CREATE TABLE phones (
 	UNIQUE(phone_number),
 	FOREIGN KEY(username) REFERENCES Users(username) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- +goose Down
+DROP TABLE phones;

@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE aliases (
 	id			BIGINT NOT NULL,
 	username	VARCHAR(255) NOT NULL,
@@ -13,3 +14,6 @@ CREATE TABLE aliases (
 	FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
+
+-- +goose Down
+DROP TABLE aliases;

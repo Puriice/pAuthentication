@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE privileges (
 	id				BIGINT NOT NULL,
 	project_id		UUID NOT NULL,
@@ -13,3 +14,6 @@ CREATE TABLE privileges (
 	UNIQUE(project_id, name),
 	FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
+
+-- +goose Down
+DROP TABLE privileges;

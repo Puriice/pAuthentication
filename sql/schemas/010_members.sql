@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE members (
 	username	VARCHAR(255) NOT NULL,
 	project_id	UUID NOT NULL,
@@ -11,3 +12,6 @@ CREATE TABLE members (
 	FOREIGN KEY(project_id) REFERENCES projects(ID) ON DELETE CASCADE,
 	FOREIGN KEY(role_id) REFERENCES roles(ID) ON DELETE CASCADE
 );
+
+-- +goose Down
+DROP TABLE members;

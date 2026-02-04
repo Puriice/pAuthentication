@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE projects (
 	id			UUID NOT NULL,
 	owner		VARCHAR(255) NOT NULL,
@@ -9,3 +10,6 @@ CREATE TABLE projects (
 	PRIMARY KEY (id),
 	FOREIGN KEY (owner) REFERENCES users(username) ON DELETE RESTRICT ON UPDATE CASCADE
 );
+
+-- +goose Down
+DROP TABLE projects;

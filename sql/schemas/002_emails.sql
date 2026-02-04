@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE emails (
 	username		VARCHAR(255) NOT NULL,
 	priority_order	INT NOT NULL,
@@ -10,3 +11,6 @@ CREATE TABLE emails (
 	UNIQUE(email),
 	FOREIGN KEY(username) REFERENCES Users(username) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- +goose Down
+DROP TABLE emails;

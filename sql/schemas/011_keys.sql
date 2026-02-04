@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE api_keys (
 	token		VARCHAR(255) NOT NULL,
 	project_id	UUID NOT NULL,
@@ -13,3 +14,6 @@ CREATE TABLE api_keys (
 	FOREIGN KEY(requester) REFERENCES Users(Username) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY(role_id) REFERENCES Roles(ID) ON DELETE SET NULL
 );
+
+-- +goose Down
+DROP TABLE api_keys;

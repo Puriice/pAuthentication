@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE users (
 	username	VARCHAR(255) NOT NULL,
 	password	VARCHAR(256) NOT NULL,
@@ -10,3 +11,6 @@ CREATE TABLE users (
 	
 	PRIMARY KEY(username)
 );
+
+-- +goose Down
+DROP TABLE users;

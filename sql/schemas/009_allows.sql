@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE allows (
 	role_id				BIGINT NOT NULL,
 	privilege_id		BIGINT NOT NULL,
@@ -5,3 +6,6 @@ CREATE TABLE allows (
 	FOREIGN KEY(role_id) REFERENCES roles(id),
 	FOREIGN KEY(privilege_id) REFERENCES privileges(id)
 );
+
+-- +goose Down
+DROP TABLE allows;
