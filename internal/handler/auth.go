@@ -16,7 +16,7 @@ type Server struct {
 	DB *pgxpool.Pool
 }
 
-type user struct {
+type userLogin struct {
 	username string
 	password string
 }
@@ -40,8 +40,70 @@ func getSessionToken(audience []string, expiration *time.Time) (*jwt.Token, erro
 	return token, err
 }
 
+func setSessionCookie(w http.ResponseWriter, username string) {
+	expiration := time.Now().Add(24 * time.Hour)
+
+	token, err := getSessionToken([]string { username }, &expiration)
+
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	cookie := &http.Cookie{
+		Name: "session_token",
+		Value: token.String(),
+		Path: "/",
+		Expires: expiration,
+		SameSite: http.SameSiteLaxMode,
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, cookie)
+}
+
 func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
-	
+	contentType := r.Header.Get("Content-Type")
+	var user userLogin
+
+	switch contentType {
+		case "application/json":
+			json.NewDecoder(r.Body).Decode(&user)
+		case "application/x-www-form-urlencoded":
+			r.ParseForm()
+			user = userLogin{
+				username: r.PostFormValue("username"),
+				password: r.PostFormValue("password"),
+			}	
+	}
+
+	if user.username == "" || user.password == "" {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
+	row := s.DB.QueryRow(r.Context(), "SELECT password FROM users WHERE username = $1", user.username)
+
+	var hashedPassword string
+
+	err := row.Scan(&hashedPassword)
+
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+
+	valid := password.ComparePassword(hashedPassword, user.password)
+
+	if !valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	setSessionCookie(w, user.username)
 }
 
 func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -110,26 +172,7 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expiration := time.Now().Add(24 * time.Hour)
-
-	token, err := getSessionToken([]string { user.username }, &expiration)
-
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	cookie := &http.Cookie{
-		Name: "session_token",
-		Value: token.String(),
-		Path: "/",
-		Expires: expiration,
-		SameSite: http.SameSiteLaxMode,
-		HttpOnly: true,
-	}
-
-	http.SetCookie(w, cookie)
+	setSessionCookie(w, user.username)
 }
 
 func Router(DB *pgxpool.Pool) (*http.ServeMux) {
