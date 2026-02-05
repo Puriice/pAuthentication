@@ -1,4 +1,4 @@
-package handler
+package auth
 
 import (
 	"encoding/json"
@@ -16,12 +16,12 @@ type Server struct {
 	DB *pgxpool.Pool
 }
 
-type User struct {
+type user struct {
 	username string
 	password string
 }
 
-type UserRegistry struct {
+type userRegistry struct {
 	username string
 	password string
 	firstname string
@@ -29,19 +29,19 @@ type UserRegistry struct {
 	birthday string 
 }
 
-func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
-func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	contentType := r.Header.Get("Content-Type")
-	var user UserRegistry
+	var user userRegistry
 
 	switch contentType {
 		case "application/json":
 			json.NewDecoder(r.Body).Decode(&user)
 		case "application/x-www-form-urlencoded":
 			r.ParseForm()
-			user = UserRegistry{
+			user = userRegistry{
 				username: r.PostFormValue("username"),
 				password: r.PostFormValue("password"),
 				firstname: r.PostFormValue("firstname"),
@@ -123,4 +123,17 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, cookie)
+}
+
+func Router(DB *pgxpool.Pool) (*http.ServeMux) {
+	router := http.NewServeMux()
+
+	server := &Server{
+		DB: DB,
+	}
+	
+	router.HandleFunc("POST /auth/login", server.loginHandler)
+	router.HandleFunc("POST /auth/register", server.registerHandler)
+
+	return router
 }

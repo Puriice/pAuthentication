@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Puriice/pAuthentication/internal/handler"
+	auth "github.com/Puriice/pAuthentication/internal/handler"
 	"github.com/Puriice/pAuthentication/internal/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -50,16 +50,13 @@ func main() {
 
 	defer db.Close()
 
-	auth := handler.Server { DB: db }
+	v1Router := http.NewServeMux()
 
-	router := http.NewServeMux()
-
-	router.HandleFunc("POST /api/v1/login", auth.LoginHandler)
-	router.HandleFunc("POST /api/v1/register", auth.RegisterHandler)
+	v1Router.Handle("/api/v1/", http.StripPrefix("/api/v1", auth.Router(db)))
 
 	server := http.Server{
 		Addr: fmt.Sprintf(":%s", Port),
-		Handler: middleware.Logger(router),
+		Handler: middleware.Logger(v1Router),
 	}
 
 	log.Printf("Listening on port %s", Port)
