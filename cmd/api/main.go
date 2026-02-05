@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	auth "github.com/Puriice/pAuthentication/internal/handler"
+	"github.com/Puriice/pAuthentication/internal/handler/authentication"
 	"github.com/Puriice/pAuthentication/internal/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -52,7 +52,7 @@ func main() {
 
 	v1Router := http.NewServeMux()
 
-	v1Router.Handle("/api/v1/", http.StripPrefix("/api/v1", auth.Router(db)))
+	v1Router.Handle("/api/v1/", http.StripPrefix("/api/v1", authentication.Router(db)))
 
 	server := http.Server{
 		Addr: fmt.Sprintf(":%s", Port),
