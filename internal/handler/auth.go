@@ -29,7 +29,19 @@ type userRegistry struct {
 	birthday string 
 }
 
+func getSessionToken(audience []string, expiration *time.Time) (*jwt.Token, error) {
+	claims := &jwt.RegisteredClaims {
+		Audience: audience,
+		ExpiresAt: jwt.NewNumericDate(*expiration),
+	}
+
+	token, err := token.Encode(claims)
+
+	return token, err
+}
+
 func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
+	
 }
 
 func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,12 +112,7 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	expiration := time.Now().Add(24 * time.Hour)
 
-	claims := &jwt.RegisteredClaims {
-		Audience: []string {user.username},
-		ExpiresAt: jwt.NewNumericDate(expiration),
-	}
-
-	token, err := token.Encode(claims)
+	token, err := getSessionToken([]string { user.username }, &expiration)
 
 	if err != nil {
 		log.Println(err)
