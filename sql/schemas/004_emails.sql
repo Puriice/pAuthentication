@@ -1,17 +1,17 @@
 -- +goose Up
-CREATE TABLE phones (
+CREATE TABLE emails (
 	user_id			UUID NOT NULL,
 	priority_order	INT NOT NULL,
-	phone_number	TEXT NOT NULL,
-	verified		TEXT DEFAULT FALSE,
+	email			TEXT NOT NULL,
+	verified		BOOL DEFAULT FALSE,
 
 	created_at     	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  		TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at 		TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	
 	PRIMARY KEY(user_id, priority_order),
-	UNIQUE(phone_number),
+	UNIQUE(email),
 	FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- +goose Down
-DROP TABLE phones;
+DROP TABLE emails;

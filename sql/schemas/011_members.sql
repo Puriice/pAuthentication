@@ -1,0 +1,17 @@
+-- +goose Up
+CREATE TABLE members (
+	user_id		UUID NOT NULL,
+	project_id	UUID NOT NULL,
+	role_id		UUID NOT NULL,
+
+	created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at 	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	
+	PRIMARY KEY(user_id, project_id),
+	FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE,
+	FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
+);
+
+-- +goose Down
+DROP TABLE members;
