@@ -28,7 +28,6 @@ type userRegistry struct {
 	password string
 	firstname string
 	lastname string
-	birthday string 
 }
 
 type TokenClaim struct {
@@ -178,11 +177,10 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 				password: r.PostFormValue("password"),
 				firstname: r.PostFormValue("firstname"),
 				lastname: r.PostFormValue("lastname"),
-				birthday: r.PostFormValue("birthday"),
 			}	
 	}
 
-	if user.username == "" || user.password == "" || user.firstname == "" || user.lastname == "" {
+	if user.username == "" || user.password == "" || user.firstname == "" {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
@@ -195,27 +193,13 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 		return;
 	}
 
-	var birthday *time.Time
-
-
-	if user.birthday != "" {
-		t, err := time.Parse(time.RFC3339, user.birthday)
-
-		if err == nil {
-			birthday = &t
-		}
-	} else {
-		birthday = nil
-	}
-
 	cmdTag, err := s.DB.Exec(
 		r.Context(), 
-		"INSERT INTO users (username, password, firstname, lastname, birthday) VALUES ($1, $2, $3, $4, $5)",
+		"INSERT INTO users (username, password, firstname, lastname) VALUES ($1, $2, $3, $4)",
 		user.username,
 		password,
 		user.firstname,
 		user.lastname,
-		birthday,
 	)
 
 	if err != nil {
