@@ -1,4 +1,4 @@
-package authentication
+package handler
 
 import (
 	"context"
@@ -200,7 +200,7 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	setSessionCookie(w, getAndAppendAudiences(r, &user))
 }
 
-func Router(DB *pgxpool.Pool) (http.Handler) {
+func AuthRouter(DB *pgxpool.Pool) (http.Handler) {
 	router := http.NewServeMux()
 
 	server := &Server{
