@@ -23,13 +23,6 @@ type User struct {
 	password string
 }
 
-type userRegistry struct {
-	username string
-	password string
-	firstname string
-	lastname string
-}
-
 type TokenClaim struct {
 	aud string
 }
@@ -43,6 +36,20 @@ func getSessionToken(audience []string, expiration *time.Time) (*jwt.Token, erro
 	token, err := token.Encode(claims)
 
 	return token, err
+}
+
+func getAndAppendAudiences(r *http.Request, user *User) [] string {
+	claims, ok := r.Context().Value("token").(jwt.RegisteredClaims)
+	var audience []string
+
+	if !ok {
+		audience = []string { user.username }
+	} else {
+		audience = claims.Audience
+		audience = append(audience, user.username)
+	}
+
+	return audience
 }
 
 func setSessionCookie(w http.ResponseWriter, usernames []string) {
@@ -68,7 +75,7 @@ func setSessionCookie(w http.ResponseWriter, usernames []string) {
 	http.SetCookie(w, cookie)
 }
 
-func DeReAuthenticate(next http.Handler) http.Handler {
+func deReAuthenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
 		contentType := r.Header.Get("Content-Type")
 		var user User
@@ -130,7 +137,7 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := s.DB.QueryRow(r.Context(), "SELECT password FROM users WHERE username = $1", user.username)
+	row := s.DB.QueryRow(r.Context(), "SELECT password FROM user_credentials WHERE username = $1", user.username)
 
 	var hashedPassword string
 
@@ -150,38 +157,16 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims, ok := r.Context().Value("token").(jwt.RegisteredClaims)
-	var audience []string
 
-	if !ok {
-		audience = []string { user.username }
-	} else {
-		audience = claims.Audience
-		audience = append(audience, user.username)
-	}
-
-	setSessionCookie(w, audience)
+	setSessionCookie(w, getAndAppendAudiences(r, &user))
 }
 
 func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
-	contentType := r.Header.Get("Content-Type")
-	var user userRegistry
+	user, ok := r.Context().Value("user").(User)
 
-	switch contentType {
-		case "application/json":
-			json.NewDecoder(r.Body).Decode(&user)
-		case "application/x-www-form-urlencoded":
-			r.ParseForm()
-			user = userRegistry{
-				username: r.PostFormValue("username"),
-				password: r.PostFormValue("password"),
-				firstname: r.PostFormValue("firstname"),
-				lastname: r.PostFormValue("lastname"),
-			}	
-	}
-
-	if user.username == "" || user.password == "" || user.firstname == "" {
-		w.WriteHeader(http.StatusUnprocessableEntity)
+	if !ok {
+		log.Println("User not found in context")
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -195,11 +180,9 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	cmdTag, err := s.DB.Exec(
 		r.Context(), 
-		"INSERT INTO users (username, password, firstname, lastname) VALUES ($1, $2, $3, $4)",
+		"INSERT INTO user_credentials (username, password) VALUES ($1, $2)",
 		user.username,
 		password,
-		user.firstname,
-		user.lastname,
 	)
 
 	if err != nil {
@@ -214,17 +197,7 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims, ok := r.Context().Value("token").(jwt.RegisteredClaims)
-	var audience []string
-
-	if !ok {
-		audience = []string { user.username }
-	} else {
-		audience = claims.Audience
-		audience = append(audience, user.username)
-	}
-
-	setSessionCookie(w, audience)
+	setSessionCookie(w, getAndAppendAudiences(r, &user))
 }
 
 func Router(DB *pgxpool.Pool) (http.Handler) {
@@ -237,5 +210,5 @@ func Router(DB *pgxpool.Pool) (http.Handler) {
 	router.HandleFunc("POST /auth/login", server.loginHandler)
 	router.HandleFunc("POST /auth/register", server.registerHandler)
 
-	return DeReAuthenticate(router)
+	return deReAuthenticate(router)
 }
