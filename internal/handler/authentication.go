@@ -9,6 +9,7 @@ import (
 	"time"
 
 	token "github.com/Puriice/pAuthentication/internal/jwt"
+	"github.com/Puriice/pAuthentication/internal/middleware"
 	"github.com/Puriice/pAuthentication/pkg/password"
 	"github.com/cristalhq/jwt/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -75,8 +76,8 @@ func setSessionCookie(w http.ResponseWriter, usernames []string) {
 	http.SetCookie(w, cookie)
 }
 
-func deReAuthenticate(next http.Handler) http.Handler {
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+func parseBody(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		contentType := r.Header.Get("Content-Type")
 		var user User
 
@@ -98,7 +99,22 @@ func deReAuthenticate(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), "user", user)
 
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func deReAuthenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+		user, ok := r.Context().Value("user").(User)
+
+		if !ok {
+			log.Println("User not found in context")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		cookie, err := r.Cookie("session_token")
+		ctx := r.Context()
 
 		if err == nil {
 			token, err := token.Decode(cookie.Value, nil)
@@ -119,8 +135,9 @@ func deReAuthenticate(next http.Handler) http.Handler {
 				return
 			}
 
+
 			if err == nil {
-				ctx = context.WithValue(ctx, "token", claims)
+				ctx = context.WithValue(r.Context(), "token", claims)
 			}
 		}
 		
@@ -210,5 +227,8 @@ func AuthRouter(DB *pgxpool.Pool) (http.Handler) {
 	router.HandleFunc("POST /auth/login", server.loginHandler)
 	router.HandleFunc("POST /auth/register", server.registerHandler)
 
-	return deReAuthenticate(router)
+	return middleware.Pipe(
+		parseBody,
+		deReAuthenticate,
+	)(router)
 }
