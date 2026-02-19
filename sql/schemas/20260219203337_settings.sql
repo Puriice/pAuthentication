@@ -1,4 +1,6 @@
 -- +goose Up
+-- +goose StatementBegin
+SELECT 'up SQL query';
 CREATE TABLE settings (
 	project_id		UUID NOT NULL,
 	redirect_url	VARCHAR(255),
@@ -11,6 +13,10 @@ CREATE TABLE settings (
 	PRIMARY KEY(project_id),
 	FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
+-- +goose StatementEnd
 
 -- +goose Down
+-- +goose StatementBegin
+SELECT 'down SQL query';
 DROP TABLE settings;
+-- +goose StatementEnd

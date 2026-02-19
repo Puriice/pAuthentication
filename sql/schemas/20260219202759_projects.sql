@@ -1,4 +1,6 @@
 -- +goose Up
+-- +goose StatementBegin
+SELECT 'up SQL query';
 CREATE TABLE projects (
 	id			UUID NOT NULL,
 	owner		UUID NOT NULL,
@@ -10,6 +12,10 @@ CREATE TABLE projects (
 	PRIMARY KEY (id),
 	FOREIGN KEY (owner) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
+-- +goose StatementEnd
 
 -- +goose Down
-DROP TABLE projects;
+-- +goose StatementBegin
+SELECT 'down SQL query';
+DROP TABLE projects CASCADE;
+-- +goose StatementEnd

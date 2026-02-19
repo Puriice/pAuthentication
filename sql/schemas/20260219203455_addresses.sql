@@ -1,4 +1,6 @@
--- +goose up
+-- +goose Up
+-- +goose StatementBegin
+SELECT 'up SQL query';
 CREATE TABLE address (
 	user_id				UUID NOT NULL,
 	street_address		TEXT,
@@ -10,5 +12,10 @@ CREATE TABLE address (
 	PRIMARY KEY(user_id),
 	FOREIGN KEY(user_id) REFERENCES users(id)
 );
--- +goose down
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+SELECT 'down SQL query';
 DROP TABLE address;
+-- +goose StatementEnd

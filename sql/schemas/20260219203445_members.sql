@@ -1,4 +1,6 @@
 -- +goose Up
+-- +goose StatementBegin
+SELECT 'up SQL query';
 CREATE TABLE members (
 	user_id		UUID NOT NULL,
 	project_id	UUID NOT NULL,
@@ -13,5 +15,10 @@ CREATE TABLE members (
 	FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
+-- +goose StatementEnd
+
 -- +goose Down
+-- +goose StatementBegin
+SELECT 'down SQL query';
 DROP TABLE members;
+-- +goose StatementEnd

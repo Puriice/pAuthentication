@@ -1,4 +1,6 @@
 -- +goose Up
+-- +goose StatementBegin
+SELECT 'up SQL query';
 CREATE TABLE privileges (
 	id				UUID NOT NULL,
 	project_id		UUID NOT NULL,
@@ -14,6 +16,10 @@ CREATE TABLE privileges (
 	UNIQUE(project_id, name),
 	FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
+-- +goose StatementEnd
 
 -- +goose Down
+-- +goose StatementBegin
+SELECT 'down SQL query';
 DROP TABLE privileges;
+-- +goose StatementEnd
