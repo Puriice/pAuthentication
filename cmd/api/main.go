@@ -50,13 +50,17 @@ func main() {
 
 	defer db.Close()
 
+	router := http.NewServeMux()
 	v1Router := http.NewServeMux()
 
-	v1Router.Handle("/api/v1/", http.StripPrefix("/api/v1", handler.AuthRouter(db)))
+	handler.AuthRouter(v1Router, db)
+	handler.UserRouter(v1Router, db)
+
+	router.Handle("/api/v1/", http.StripPrefix("/api/v1", v1Router))
 
 	server := http.Server{
 		Addr: fmt.Sprintf(":%s", Port),
-		Handler: middleware.Logger(v1Router),
+		Handler: middleware.Logger(router),
 	}
 
 	log.Printf("Listening on port %s", Port)

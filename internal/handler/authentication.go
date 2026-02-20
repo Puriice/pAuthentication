@@ -15,17 +15,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Server struct {
-	DB *pgxpool.Pool
-}
-
-type User struct {
+type userCredential struct {
 	username string
 	password string
-}
-
-type TokenClaim struct {
-	aud string
 }
 
 func getSessionToken(audience []string, expiration *time.Time) (*jwt.Token, error) {
@@ -39,7 +31,7 @@ func getSessionToken(audience []string, expiration *time.Time) (*jwt.Token, erro
 	return token, err
 }
 
-func getAndAppendAudiences(r *http.Request, user *User) [] string {
+func getAndAppendAudiences(r *http.Request, user *userCredential) [] string {
 	claims, ok := r.Context().Value("token").(jwt.RegisteredClaims)
 	var audience []string
 
@@ -79,14 +71,14 @@ func setSessionCookie(w http.ResponseWriter, usernames []string) {
 func parseBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		contentType := r.Header.Get("Content-Type")
-		var user User
+		var user userCredential
 
 		switch contentType {
 			case "application/json":
 				json.NewDecoder(r.Body).Decode(&user)
 			case "application/x-www-form-urlencoded":
 				r.ParseForm()
-				user = User{
+				user = userCredential{
 					username: r.PostFormValue("username"),
 					password: r.PostFormValue("password"),
 				}	
@@ -105,7 +97,7 @@ func parseBody(next http.Handler) http.Handler {
 
 func deReAuthenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
-		user, ok := r.Context().Value("user").(User)
+		user, ok := r.Context().Value("user").(userCredential)
 
 		if !ok {
 			log.Println("User not found in context")
@@ -146,7 +138,7 @@ func deReAuthenticate(next http.Handler) http.Handler {
 }
 
 func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value("user").(User)
+	user, ok := r.Context().Value("user").(userCredential)
 
 	if !ok {
 		log.Println("User not found in context")
@@ -179,7 +171,7 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
-	user, ok := r.Context().Value("user").(User)
+	user, ok := r.Context().Value("user").(userCredential)
 
 	if !ok {
 		log.Println("User not found in context")
@@ -217,18 +209,18 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	setSessionCookie(w, getAndAppendAudiences(r, &user))
 }
 
-func AuthRouter(DB *pgxpool.Pool) (http.Handler) {
-	router := http.NewServeMux()
-
+func AuthRouter(router *http.ServeMux, DB *pgxpool.Pool)  {
 	server := &Server{
 		DB: DB,
 	}
-	
-	router.HandleFunc("POST /auth/login", server.loginHandler)
-	router.HandleFunc("POST /auth/register", server.registerHandler)
 
-	return middleware.Pipe(
+	authRouter := http.NewServeMux()
+	
+	authRouter.HandleFunc("POST /login", server.loginHandler)
+	authRouter.HandleFunc("POST /register", server.registerHandler)
+
+	router.Handle("/auths/", http.StripPrefix("/auths", middleware.Pipe(
 		parseBody,
 		deReAuthenticate,
-	)(router)
+	)(authRouter)))
 }
