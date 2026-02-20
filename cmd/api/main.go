@@ -14,9 +14,9 @@ import (
 )
 
 func getPort() string {
-	port := os.Getenv("PORT");
+	port := os.Getenv("PORT")
 
-	if (port == "") {
+	if port == "" {
 		return "8080"
 	}
 
@@ -26,15 +26,15 @@ func getPort() string {
 var Port string
 
 func main() {
-	err := godotenv.Load() 
+	err := godotenv.Load()
 
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	
+
 	Port = getPort()
 
-	var connectionString = os.Getenv("DB_URL");
+	var connectionString = os.Getenv("DB_URL")
 
 	if connectionString == "" {
 		log.Fatal("Invalid connection string.")
@@ -59,7 +59,7 @@ func main() {
 	router.Handle("/api/v1/", http.StripPrefix("/api/v1", v1Router))
 
 	server := http.Server{
-		Addr: fmt.Sprintf(":%s", Port),
+		Addr:    fmt.Sprintf(":%s", Port),
 		Handler: middleware.Logger(router),
 	}
 
