@@ -38,7 +38,7 @@ func parseUserBody(next http.Handler) http.Handler {
 		contentType := r.Header.Get("Content-Type")
 
 		if !strings.HasPrefix(contentType, "application/json") {
-			w.WriteHeader(http.StatusUnsupportedMediaType)
+			next.ServeHTTP(w, r)
 			return
 		}
 
@@ -67,15 +67,21 @@ func (s *Server) queryID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userInfo, ok := r.Context().Value("user").(user)
 
+		var id string
+
+		username := userInfo.Username
+
 		if !ok {
-			log.Println("User not found in context")
-			w.WriteHeader(http.StatusInternalServerError)
+			_username := r.PathValue("username")
+			username = &_username
+		}
+
+		if username == nil || *username == "" {
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		var id string
-
-		err := s.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE username = $1;", *userInfo.Username).Scan(&id)
+		err := s.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE username = $1;", *username).Scan(&id)
 
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
@@ -89,7 +95,10 @@ func (s *Server) queryID(next http.Handler) http.Handler {
 
 		userInfo.Identifier = &id
 
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), "user", userInfo)))
+		ctx := context.WithValue(r.Context(), "user", userInfo)
+		ctx = context.WithValue(ctx, "id", id)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -166,18 +175,99 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
+	// userInfo, ok := r.Context().Value("user").(user)
+	// userId := r.PathValue("id")
+	// languageTag := r.PathValue("language")
+
+	// if !ok {
+	// 	log.Println("User or id not found in context")
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
+
+}
+
+func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("id").(string)
+	languageTag := r.PathValue("language")
+
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	args := []any{userId}
+
+	q := "DELETE FROM user_informations WHERE id = $1"
+
+	if languageTag != "" {
+		q += " AND language_tag = $2"
+		args = append(args, languageTag)
+	}
+
+	tx, err := s.DB.Begin(r.Context())
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	cmdTag, err := tx.Exec(r.Context(), q, args...)
+
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		http.Error(w, "User not found.", http.StatusNotFound)
+		return
+	}
+
+	if languageTag != "" {
+		tx.Commit(r.Context())
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	cmdTag, err = tx.Exec(r.Context(), "DELETE FROM users WHERE id = $1", userId)
+
+	if err != nil {
+		log.Println(err)
+		tx.Rollback(r.Context())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		tx.Rollback(r.Context())
+		http.Error(w, "User not found.", http.StatusNotFound)
+		return
+	}
+
+	tx.Commit(r.Context())
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func UserRouter(router *http.ServeMux, DB *pgxpool.Pool) {
 	server := &Server{DB: DB}
 
 	userRouter := http.NewServeMux()
-	userRouter.HandleFunc("POST /users", server.createUser)
 
 	pipeLine := middleware.Pipe(
 		parseUserBody,
 		server.queryID,
 	)
 
-	router.Handle("/users",
-		pipeLine(userRouter),
+	deletePipeLine := pipeLine(http.HandlerFunc(server.deleteUser))
+
+	userRouter.HandleFunc("PATCH /{username}/{language}", server.patchUser)
+	userRouter.Handle("DELETE /{username}", deletePipeLine)
+	userRouter.Handle("DELETE /{username}/{language}", deletePipeLine)
+
+	router.Handle("POST /users", pipeLine(http.HandlerFunc(server.createUser)))
+	router.Handle("/users/",
+		http.StripPrefix("/users", userRouter),
 	)
 }
