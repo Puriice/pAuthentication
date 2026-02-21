@@ -5,34 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"slices"
-	"time"
 
 	"github.com/Puriice/pAuthentication/internal/token"
-	"github.com/cristalhq/jwt/v5"
 )
-
-type SessionClaims struct {
-	jwt.RegisteredClaims
-	ActiveUser *string `json:"activeUser"`
-}
-
-func getExpirationDate() time.Time {
-	return time.Now().AddDate(0, 0, 1)
-}
-
-func getSessionToken(activeUser *string, audience []string, expiration *time.Time) (*jwt.Token, error) {
-	claims := &SessionClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Audience:  audience,
-			ExpiresAt: jwt.NewNumericDate(*expiration),
-		},
-		ActiveUser: activeUser,
-	}
-
-	token, err := token.Encode(claims)
-
-	return token, err
-}
 
 func AddActiveAccount(username string, w http.ResponseWriter, r *http.Request) error {
 	sessionCookie, err := r.Cookie("session_token")
@@ -40,7 +15,9 @@ func AddActiveAccount(username string, w http.ResponseWriter, r *http.Request) e
 	if err != nil {
 		expiration := getExpirationDate()
 
-		sessionToken, err := getSessionToken(nil, []string{}, &expiration)
+		subject := ""
+
+		sessionToken, err := getSessionToken(&subject, []string{}, &expiration)
 
 		if err != nil {
 			return err

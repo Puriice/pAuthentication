@@ -76,9 +76,6 @@ func deReAuthenticate(next http.Handler) http.Handler {
 
 			err = json.Unmarshal(token.Claims(), &claims)
 
-			log.Println(claims)
-			log.Println(user)
-
 			if err != nil {
 				log.Println("Error decoding claims", err)
 			} else if slices.Contains(claims.Audience, user.Username) {
@@ -166,6 +163,18 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 	session.AddActiveAccount(user.Username, w, r)
 }
 
+func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
+	err := session.RemoveActiveAccount(nil, w, r)
+
+	if err == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	log.Println(err)
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
 func AuthRouter(router *http.ServeMux, DB *pgxpool.Pool) {
 	server := &Server{
 		DB: DB,
@@ -180,4 +189,6 @@ func AuthRouter(router *http.ServeMux, DB *pgxpool.Pool) {
 		parseBody,
 		deReAuthenticate,
 	)(authRouter)))
+
+	router.HandleFunc("POST /auths/logout", server.logoutHandler)
 }
