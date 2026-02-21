@@ -151,7 +151,7 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	row := s.DB.QueryRow(r.Context(), "SELECT password FROM user_credentials WHERE username = $1", user.Username)
+	row := s.DB.QueryRow(r.Context(), "SELECT password FROM users WHERE username = $1", user.Username)
 
 	var hashedPassword string
 
@@ -192,7 +192,7 @@ func (s *Server) registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	cmdTag, err := s.DB.Exec(
 		r.Context(),
-		"INSERT INTO user_credentials (username, password) VALUES ($1, $2)",
+		"INSERT INTO users (username, password) VALUES ($1, $2)",
 		user.Username,
 		password,
 	)

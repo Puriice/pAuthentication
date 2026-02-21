@@ -1,32 +1,18 @@
+
 -- +goose Up
 -- +goose StatementBegin
 SELECT 'up SQL query';
 CREATE TABLE users (
-	id				UUID UNIQUE NOT NULL,
-	language_tag	TEXT NOT NULL DEFAULT 'en',
-	username		TEXT UNIQUE NOT NULL,
-	firstname		TEXT NOT NULL,
-	middle			VARCHAR,
-	lastname		TEXT,
-	nickname		TEXT,
-	profile			TEXT,
-	picture			TEXT,
-	website			TEXT,
-	gender			TEXT,
-	birthday		DATE,
-	zoneinfo		TEXT,
-	locale			TEXT,
+	id			UUID			UNIQUE NOT NULL DEFAULT gen_random_uuid(),
+	username	TEXT 			NOT NULL,
+	password	VARCHAR(256)	NOT NULL,
 
-	created_at		TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	updated_at 		TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	
-	PRIMARY KEY(id, language_tag)
+	PRIMARY KEY(id)
 );
-
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 SELECT 'down SQL query';
-DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE users;
 -- +goose StatementEnd

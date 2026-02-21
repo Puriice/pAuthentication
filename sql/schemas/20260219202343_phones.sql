@@ -2,13 +2,13 @@
 -- +goose StatementBegin
 SELECT 'up SQL query';
 CREATE TABLE phones (
-	user_id			UUID NOT NULL,
-	priority_order	INT NOT NULL,
-	phone_number	TEXT NOT NULL,
-	verified		TEXT DEFAULT FALSE,
+	user_id		 	UUID		NOT NULL,
+	priority_order	INT			NOT NULL,
+	phone_number	TEXT		NOT NULL,
+	verified		TEXT		DEFAULT FALSE,
 
-	created_at     	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  		TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at     	TIMESTAMP 	NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  	TIMESTAMP 	NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	
 	PRIMARY KEY(user_id, priority_order),
 	UNIQUE(phone_number),

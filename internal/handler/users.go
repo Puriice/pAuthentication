@@ -75,7 +75,7 @@ func (s *Server) queryID(next http.Handler) http.Handler {
 
 		var id string
 
-		err := s.DB.QueryRow(r.Context(), "SELECT id FROM user_credentials WHERE username = $1;", *userInfo.Username).Scan(&id)
+		err := s.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE username = $1;", *userInfo.Username).Scan(&id)
 
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
@@ -124,20 +124,19 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 		languageTag = &defaultLanguageTag
 	}
 
-	q := `INSERT INTO users` +
-		`(id, language_tag, username, firstname,` +
+	q := `INSERT INTO user_informations` +
+		`(id, language_tag, firstname,` +
 		` middle, lastname, nickname, profile,` +
 		` picture, website, gender, birthday,` +
 		` zoneinfo, locale) VALUES` +
 		` ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,` +
-		` $11, $12, $13, $14)`
+		` $11, $12, $13)`
 
 	cmdTag, err := s.DB.Exec(
 		r.Context(),
 		q,
 		userInfo.Identifier,
 		languageTag,
-		userInfo.Username,
 		userInfo.Firstname,
 		userInfo.Middlename,
 		userInfo.Lastname,
@@ -152,6 +151,7 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
+		log.Printf("Failed to create user: %s, with language tag: %s.\n", *userInfo.Username, *languageTag)
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
