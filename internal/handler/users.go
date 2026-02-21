@@ -190,20 +190,10 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("id").(string)
-	languageTag := r.PathValue("language")
 
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return
-	}
-
-	args := []any{userId}
-
-	q := "DELETE FROM user_informations WHERE id = $1"
-
-	if languageTag != "" {
-		q += " AND language_tag = $2"
-		args = append(args, languageTag)
 	}
 
 	tx, err := s.DB.Begin(r.Context())
@@ -213,7 +203,11 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cmdTag, err := tx.Exec(r.Context(), q, args...)
+	cmdTag, err := tx.Exec(
+		r.Context(),
+		"DELETE FROM user_informations WHERE id = $1",
+		userId,
+	)
 
 	if err != nil {
 		log.Println(err)
@@ -223,12 +217,6 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	if cmdTag.RowsAffected() == 0 {
 		http.Error(w, "User not found.", http.StatusNotFound)
-		return
-	}
-
-	if languageTag != "" {
-		tx.Commit(r.Context())
-		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
@@ -250,6 +238,35 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (s *Server) deleteUserWithLanguage(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("id").(string)
+	languageTag := r.PathValue("language")
+
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	cmdTag, err := s.DB.Exec(
+		r.Context(),
+		"DELETE FROM user_informations WHERE id = $1 AND language_tag = $2",
+		userId,
+		languageTag)
+
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		http.Error(w, "User not found.", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func UserRouter(router *http.ServeMux, DB *pgxpool.Pool) {
 	server := &Server{DB: DB}
 
@@ -260,14 +277,12 @@ func UserRouter(router *http.ServeMux, DB *pgxpool.Pool) {
 		server.queryID,
 	)
 
-	deletePipeLine := pipeLine(http.HandlerFunc(server.deleteUser))
-
 	userRouter.HandleFunc("PATCH /{username}/{language}", server.patchUser)
-	userRouter.Handle("DELETE /{username}", deletePipeLine)
-	userRouter.Handle("DELETE /{username}/{language}", deletePipeLine)
+	userRouter.HandleFunc("DELETE /{username}", server.deleteUser)
+	userRouter.HandleFunc("DELETE /{username}/{language}", server.deleteUserWithLanguage)
 
 	router.Handle("POST /users", pipeLine(http.HandlerFunc(server.createUser)))
-	router.Handle("/users/",
-		http.StripPrefix("/users", userRouter),
+	router.Handle("/users/{username}/",
+		http.StripPrefix("/users", pipeLine(userRouter)),
 	)
 }
