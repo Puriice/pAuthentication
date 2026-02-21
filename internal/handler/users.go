@@ -188,7 +188,7 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("id").(string)
 
 	if !ok {
@@ -278,7 +278,7 @@ func UserRouter(router *http.ServeMux, DB *pgxpool.Pool) {
 	)
 
 	userRouter.HandleFunc("PATCH /{username}/{language}", server.patchUser)
-	userRouter.HandleFunc("DELETE /{username}", server.deleteUser)
+	userRouter.HandleFunc("DELETE /{username}", server.deleteAccount)
 	userRouter.HandleFunc("DELETE /{username}/{language}", server.deleteUserWithLanguage)
 
 	router.Handle("POST /users", pipeLine(http.HandlerFunc(server.createUser)))
