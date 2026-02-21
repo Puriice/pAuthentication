@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Puriice/pAuthentication/internal/cookies/session"
 	"github.com/Puriice/pAuthentication/internal/middleware"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -191,8 +192,14 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("id").(string)
 
-	log.Println(userId)
 	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	username := r.PathValue("username")
+
+	if username == "" {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -227,6 +234,15 @@ func (s *Server) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	if cmdTag.RowsAffected() == 0 {
 		tx.Rollback(r.Context())
 		http.Error(w, "User not found.", http.StatusNotFound)
+		return
+	}
+
+	err = session.RemoveActiveAccount(&username, w, r)
+
+	if err != nil {
+		log.Println(err)
+		tx.Rollback(r.Context())
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
