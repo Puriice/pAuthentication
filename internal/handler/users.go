@@ -191,6 +191,7 @@ func (s *Server) patchUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value("id").(string)
 
+	log.Println(userId)
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -212,11 +213,6 @@ func (s *Server) deleteAccount(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if cmdTag.RowsAffected() == 0 {
-		http.Error(w, "User not found.", http.StatusNotFound)
 		return
 	}
 
@@ -278,7 +274,7 @@ func UserRouter(router *http.ServeMux, DB *pgxpool.Pool) {
 	)
 
 	userRouter.HandleFunc("PATCH /{username}/{language}", server.patchUser)
-	userRouter.HandleFunc("DELETE /{username}", server.deleteAccount)
+	userRouter.HandleFunc("DELETE /{username}/all", server.deleteAccount)
 	userRouter.HandleFunc("DELETE /{username}/{language}", server.deleteUserWithLanguage)
 
 	router.Handle("POST /users", pipeLine(http.HandlerFunc(server.createUser)))

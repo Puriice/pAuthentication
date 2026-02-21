@@ -1,4 +1,4 @@
-package jwt
+package token
 
 import (
 	"errors"
@@ -38,17 +38,17 @@ func GetSigner() (*jwt.HSAlg, error) {
 		return nil, err
 	}
 
-	signer = _signer;
+	signer = _signer
 
 	return signer, err
 }
 
-func GetBuilder() (*jwt.Builder, error){
-	if (builder != nil) {
+func GetBuilder() (*jwt.Builder, error) {
+	if builder != nil {
 		return builder, nil
 	}
 
-	signer, err := GetSigner();
+	signer, err := GetSigner()
 
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func GetBuilder() (*jwt.Builder, error){
 	_builder := jwt.NewBuilder(signer)
 
 	builder = _builder
-	
+
 	return _builder, nil
 }
 
@@ -78,13 +78,13 @@ func GetVerifier() (*jwt.HSAlg, error) {
 		return nil, err
 	}
 
-	verifier = _verifier;
+	verifier = _verifier
 
 	return verifier, err
 }
 
 func Encode(claims any) (*jwt.Token, error) {
-	builder, err := GetBuilder();
+	builder, err := GetBuilder()
 
 	if err != nil {
 		return nil, err
