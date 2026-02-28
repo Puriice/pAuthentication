@@ -2,13 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/Puriice/pAuthentication/internal/handler"
-	"github.com/Puriice/pAuthentication/internal/middleware"
+	"github.com/Puriice/pAuthentication/internal/server"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -50,19 +47,7 @@ func main() {
 
 	defer db.Close()
 
-	router := http.NewServeMux()
-	v1Router := http.NewServeMux()
+	httpServer := server.NewServer("", getPort(), db)
 
-	handler.AuthRouter(v1Router, db)
-	handler.UserRouter(v1Router, db)
-
-	router.Handle("/api/v1/", http.StripPrefix("/api/v1", v1Router))
-
-	server := http.Server{
-		Addr:    fmt.Sprintf(":%s", Port),
-		Handler: middleware.Logger(router),
-	}
-
-	log.Printf("Listening on port %s", Port)
-	log.Fatal(server.ListenAndServe())
+	server.Start(httpServer)
 }
