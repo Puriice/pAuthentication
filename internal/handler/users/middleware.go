@@ -48,8 +48,9 @@ func (h *Handler) queryID(next http.Handler) http.Handler {
 
 		username := userInfo.Username
 
-		if !ok {
+		if !ok || username == nil {
 			_username := r.PathValue("username")
+
 			username = &_username
 		}
 

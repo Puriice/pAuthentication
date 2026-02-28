@@ -57,16 +57,30 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) patchUser(w http.ResponseWriter, r *http.Request) {
-	// userInfo, ok := r.Context().Value("user").(user)
-	// userId := r.PathValue("id")
-	// languageTag := r.PathValue("language")
+	userInfo, ok := r.Context().Value("user").(types.User)
+	languageTag := r.PathValue("language")
 
-	// if !ok {
-	// 	log.Println("User or id not found in context")
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	return
-	// }
+	if !ok {
+		log.Println("User not found in context")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
+	userId, ok := r.Context().Value("id").(string)
+
+	if !ok {
+		log.Println("ID not found in context")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err := h.repo.UpdateUserInformation(r.Context(), userId, languageTag, userInfo)
+
+	err = pg.CheckError(err, w)
+
+	if err == nil {
+		w.WriteHeader(http.StatusNoContent)
+	}
 }
 
 func (h *Handler) deleteAccount(w http.ResponseWriter, r *http.Request) {

@@ -14,6 +14,7 @@ type AuthenticationRepository interface {
 type UserRepository interface {
 	CreateUser(context context.Context, user types.User) error
 	QueryIDFromUsername(context context.Context, username *string) (string, error)
+	UpdateUserInformation(context context.Context, id string, tag string, payload types.User) error
 	RemoveUserLanguage(context context.Context, id string, tag string) error
 	DeleteAccount(context context.Context, id string) error
 }

@@ -2,11 +2,13 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Puriice/pAuthentication/internal/constant"
 	"github.com/Puriice/pAuthentication/internal/types"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/puriice/httplibs/pkg/pgutils"
 )
 
 type UserRepo struct {
@@ -74,6 +76,44 @@ func (m *UserRepo) QueryIDFromUsername(context context.Context, username *string
 	}
 
 	return id, nil
+}
+
+func (r *UserRepo) UpdateUserInformation(context context.Context, id string, tag string, payload types.User) error {
+	payload.Identifier = nil
+	payload.Language = nil
+
+	setQuery, argv, err := pgutils.CreateSetStatement(payload, 1)
+
+	if err != nil {
+		return err
+	}
+
+	argn := len(argv) + 1
+
+	q := fmt.Sprintf(
+		"UPDATE user_informations SET %s WHERE id = $%d AND language_tag = $%d;",
+		setQuery,
+		argn,
+		argn+1,
+	)
+
+	argv = append(argv, id, tag)
+
+	cmdTag, err := r.db.Exec(
+		context,
+		q,
+		argv...,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return types.ErrNoRowsAffected
+	}
+
+	return nil
 }
 
 func (m *UserRepo) DeleteAccount(context context.Context, id string) error {
