@@ -6,11 +6,10 @@ import (
 
 	"github.com/Puriice/pAuthentication/internal/cookies/session"
 	"github.com/Puriice/pAuthentication/internal/pg"
+	"github.com/Puriice/pAuthentication/internal/repository"
 	"github.com/Puriice/pAuthentication/internal/types"
 	"github.com/puriice/httplibs/pkg/middleware"
 )
-
-const DEFAULT_LANGUAGE_TAG = "en"
 
 func isEmpty(fields ...*string) bool {
 	for _, f := range fields {
@@ -23,12 +22,12 @@ func isEmpty(fields ...*string) bool {
 }
 
 type Handler struct {
-	model types.UserModel
+	repo repository.UserRepository
 }
 
-func NewHandler(model types.UserModel) *Handler {
+func NewHandler(repo repository.UserRepository) *Handler {
 	return &Handler{
-		model: model,
+		repo: repo,
 	}
 }
 
@@ -46,7 +45,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.model.CreateUser(r.Context(), userInfo)
+	err := h.repo.CreateUser(r.Context(), userInfo)
 
 	err = pg.CheckError(err, w)
 
@@ -92,7 +91,7 @@ func (h *Handler) deleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.model.DeleteAccount(r.Context(), userId)
+	err = h.repo.DeleteAccount(r.Context(), userId)
 
 	err = pg.CheckError(err, w)
 
@@ -112,7 +111,7 @@ func (h *Handler) deleteUserWithLanguage(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err := h.model.RemoveUserLanguage(r.Context(), userId, languageTag)
+	err := h.repo.RemoveUserLanguage(r.Context(), userId, languageTag)
 
 	err = pg.CheckError(err, w)
 

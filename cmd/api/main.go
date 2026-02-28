@@ -10,6 +10,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
+func getHost() string {
+	host := os.Getenv("HOST")
+
+	return host
+}
+
 func getPort() string {
 	port := os.Getenv("PORT")
 
@@ -47,7 +53,6 @@ func main() {
 
 	defer db.Close()
 
-	httpServer := server.NewServer("", getPort(), db)
-
-	server.Start(httpServer)
+	server := server.NewServer(getHost(), getPort(), db)
+	server.Start()
 }

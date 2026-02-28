@@ -1,28 +1,29 @@
-package users
+package postgres
 
 import (
 	"context"
 
+	"github.com/Puriice/pAuthentication/internal/constant"
 	"github.com/Puriice/pAuthentication/internal/types"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type UserModel struct {
+type UserRepo struct {
 	db *pgxpool.Pool
 }
 
-func NewModel(db *pgxpool.Pool) *UserModel {
-	return &UserModel{
+func NewRepository(db *pgxpool.Pool) *UserRepo {
+	return &UserRepo{
 		db: db,
 	}
 }
 
-func (m *UserModel) CreateUser(context context.Context, user types.User) error {
+func (m *UserRepo) CreateUser(context context.Context, user types.User) error {
 	languageTag := user.Language
 
 	if languageTag == nil {
-		defaultLanguageTag := DEFAULT_LANGUAGE_TAG
+		defaultLanguageTag := constant.DEFAULT_LANGUAGE_TAG
 		languageTag = &defaultLanguageTag
 	}
 
@@ -63,7 +64,7 @@ func (m *UserModel) CreateUser(context context.Context, user types.User) error {
 	return nil
 }
 
-func (m *UserModel) QueryIDFromUsername(context context.Context, username *string) (string, error) {
+func (m *UserRepo) QueryIDFromUsername(context context.Context, username *string) (string, error) {
 	var id string
 
 	err := m.db.QueryRow(context, "SELECT id FROM users WHERE username = $1;", *username).Scan(&id)
@@ -75,7 +76,7 @@ func (m *UserModel) QueryIDFromUsername(context context.Context, username *strin
 	return id, nil
 }
 
-func (m *UserModel) DeleteAccount(context context.Context, id string) error {
+func (m *UserRepo) DeleteAccount(context context.Context, id string) error {
 	tx, err := m.db.Begin(context)
 
 	if err != nil {
@@ -109,7 +110,7 @@ func (m *UserModel) DeleteAccount(context context.Context, id string) error {
 	return nil
 }
 
-func (m *UserModel) RemoveUserLanguage(context context.Context, id string, tag string) error {
+func (m *UserRepo) RemoveUserLanguage(context context.Context, id string, tag string) error {
 	cmdTag, err := m.db.Exec(
 		context,
 		"DELETE FROM user_informations WHERE id = $1 AND language_tag = $2",

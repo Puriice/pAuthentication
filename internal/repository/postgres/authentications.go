@@ -1,4 +1,4 @@
-package authentication
+package postgres
 
 import (
 	"context"
@@ -7,17 +7,17 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type AuthModel struct {
+type AuthRepo struct {
 	db *pgxpool.Pool
 }
 
-func NewModel(db *pgxpool.Pool) *AuthModel {
-	return &AuthModel{
+func NewAuthRepository(db *pgxpool.Pool) *AuthRepo {
+	return &AuthRepo{
 		db: db,
 	}
 }
 
-func (m *AuthModel) QueryPassword(context context.Context, username string) (string, error) {
+func (m *AuthRepo) QueryPassword(context context.Context, username string) (string, error) {
 	var hashedPassword string
 
 	err := m.db.QueryRow(context, "SELECT password FROM users WHERE username = $1", username).Scan(&hashedPassword)
@@ -29,7 +29,7 @@ func (m *AuthModel) QueryPassword(context context.Context, username string) (str
 	return hashedPassword, nil
 }
 
-func (m *AuthModel) RegisterUser(context context.Context, credential types.UserCredential) error {
+func (m *AuthRepo) RegisterUser(context context.Context, credential types.UserCredential) error {
 	cmdTag, err := m.db.Exec(
 		context,
 		"INSERT INTO users (username, password) VALUES ($1, $2)",

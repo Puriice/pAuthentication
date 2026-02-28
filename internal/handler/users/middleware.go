@@ -58,7 +58,7 @@ func (h *Handler) queryID(next http.Handler) http.Handler {
 			return
 		}
 
-		id, err := h.model.QueryIDFromUsername(r.Context(), username)
+		id, err := h.repo.QueryIDFromUsername(r.Context(), username)
 
 		err = pg.CheckError(err, w)
 

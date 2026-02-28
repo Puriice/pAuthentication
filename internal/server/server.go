@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/Puriice/pAuthentication/internal/handler/authentication"
 	"github.com/Puriice/pAuthentication/internal/handler/users"
+	"github.com/Puriice/pAuthentication/internal/repository/postgres"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/puriice/httplibs/pkg/middleware"
 )
@@ -29,28 +31,29 @@ func NewServer(host string, port string, db *pgxpool.Pool) *Server {
 	}
 }
 
-func Start(server *Server) {
-	address := fmt.Sprintf("%s:%s", server.Host, server.Port)
+func (s *Server) Start() {
+	address := fmt.Sprintf("%s:%s", s.Host, s.Port)
 
 	router := http.NewServeMux()
 	v1Router := http.NewServeMux()
 
-	authModel := authentication.NewModel(server.db)
-	authHandler := authentication.NewHandler(*authModel)
+	authModel := postgres.NewAuthRepository(s.db)
+	authHandler := authentication.NewHandler(authModel)
 	authHandler.RegisterRouter(v1Router)
 
-	userModel := users.NewModel(server.db)
+	userModel := postgres.NewRepository(s.db)
 	userHandler := users.NewHandler(userModel)
 	userHandler.RegisterRoute(v1Router)
 
 	router.Handle("/api/v1/", http.StripPrefix("/api/v1", v1Router))
 
-	httpServer := http.Server{
+	server := http.Server{
 		Addr:    address,
 		Handler: middleware.Logger(router),
 	}
 
-	go httpServer.ListenAndServe()
+	go server.ListenAndServe()
+	log.Printf("Server listening at %s", server.Addr)
 
 	quit := make(chan os.Signal, 1)
 
@@ -61,5 +64,5 @@ func Start(server *Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	httpServer.Shutdown(ctx)
+	server.Shutdown(ctx)
 }

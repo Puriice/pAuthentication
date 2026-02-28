@@ -6,18 +6,19 @@ import (
 
 	"github.com/Puriice/pAuthentication/internal/cookies/session"
 	"github.com/Puriice/pAuthentication/internal/pg"
+	"github.com/Puriice/pAuthentication/internal/repository"
 	"github.com/Puriice/pAuthentication/internal/types"
 	"github.com/Puriice/pAuthentication/pkg/password"
 	"github.com/puriice/httplibs/pkg/middleware"
 )
 
 type Handler struct {
-	model AuthModel
+	repo repository.AuthenticationRepository
 }
 
-func NewHandler(model AuthModel) *Handler {
+func NewHandler(repo repository.AuthenticationRepository) *Handler {
 	return &Handler{
-		model: model,
+		repo: repo,
 	}
 }
 
@@ -30,7 +31,7 @@ func (s *Handler) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, err := s.model.QueryPassword(r.Context(), user.Username)
+	hashedPassword, err := s.repo.QueryPassword(r.Context(), user.Username)
 
 	err = pg.CheckError(err, w)
 
@@ -67,7 +68,7 @@ func (s *Handler) registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	user.Password = password
 
-	err = s.model.RegisterUser(r.Context(), user)
+	err = s.repo.RegisterUser(r.Context(), user)
 
 	err = pg.CheckError(err, w)
 
