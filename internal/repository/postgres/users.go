@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Puriice/pAuthentication/internal/constant"
 	"github.com/Puriice/pAuthentication/internal/types"
@@ -19,6 +20,80 @@ func NewRepository(db *pgxpool.Pool) *UserRepo {
 	return &UserRepo{
 		db: db,
 	}
+}
+
+func (m *UserRepo) QueryIDFromUsername(context context.Context, username *string) (string, error) {
+	var id string
+
+	err := m.db.QueryRow(context, "SELECT id FROM users WHERE username = $1;", *username).Scan(&id)
+
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func (r *UserRepo) QueryUser(context context.Context, id string, username string, tag string) (*[]types.User, error) {
+	users := make([]types.User, 0)
+
+	var q strings.Builder
+	argv := make([]any, 0, 2)
+
+	argv = append(argv, id)
+
+	q.WriteString("SELECT language_tag, firstname, middle, lastname, nickname, profile, picture, website, gender, birthday, zoneinfo, locale FROM user_informations WHERE id = $1")
+
+	if tag != "" {
+		q.WriteString(" AND language_tag = $2")
+		argv = append(argv, tag)
+	}
+
+	rows, err := r.db.Query(
+		context,
+		q.String(),
+		argv...,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		user := types.User{
+			Identifier: &id,
+			Username:   &username,
+		}
+
+		err = rows.Scan(
+			&user.Language,
+			&user.Firstname,
+			&user.Middlename,
+			&user.Lastname,
+			&user.Nickname,
+			&user.Profile,
+			&user.Picture,
+			&user.Website,
+			&user.Gender,
+			&user.Birthday,
+			&user.Zoneinfo,
+			&user.Locale,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &users, nil
 }
 
 func (m *UserRepo) CreateUser(context context.Context, user types.User) error {
@@ -64,18 +139,6 @@ func (m *UserRepo) CreateUser(context context.Context, user types.User) error {
 	}
 
 	return nil
-}
-
-func (m *UserRepo) QueryIDFromUsername(context context.Context, username *string) (string, error) {
-	var id string
-
-	err := m.db.QueryRow(context, "SELECT id FROM users WHERE username = $1;", *username).Scan(&id)
-
-	if err != nil {
-		return "", err
-	}
-
-	return id, nil
 }
 
 func (r *UserRepo) UpdateUserInformation(context context.Context, id string, tag string, payload types.User) error {

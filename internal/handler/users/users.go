@@ -8,6 +8,7 @@ import (
 	"github.com/Puriice/pAuthentication/internal/pg"
 	"github.com/Puriice/pAuthentication/internal/repository"
 	"github.com/Puriice/pAuthentication/internal/types"
+	"github.com/puriice/httplibs/pkg/json"
 	"github.com/puriice/httplibs/pkg/middleware"
 )
 
@@ -28,6 +29,33 @@ type Handler struct {
 func NewHandler(repo repository.UserRepository) *Handler {
 	return &Handler{
 		repo: repo,
+	}
+}
+
+func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
+	id, ok := r.Context().Value("id").(string)
+
+	if !ok {
+		log.Println("ID not found in context")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	username := r.PathValue("username")
+	tag := r.PathValue("language")
+
+	users, err := h.repo.QueryUser(r.Context(), id, username, tag)
+
+	err = pg.CheckError(err, w)
+
+	if err != nil {
+		return
+	}
+
+	if tag != "" {
+		json.SendJSON(w, http.StatusOK, (*users)[0])
+	} else {
+		json.SendJSON(w, http.StatusOK, *users)
 	}
 }
 
@@ -144,11 +172,13 @@ func (h *Handler) RegisterRoute(router *http.ServeMux) {
 		h.queryID,
 	)
 
+	userRouter.HandleFunc("GET /{username}/{language}", h.getUser)
 	userRouter.HandleFunc("PATCH /{username}/{language}", h.patchUser)
 	userRouter.HandleFunc("DELETE /{username}/all", h.deleteAccount)
 	userRouter.HandleFunc("DELETE /{username}/{language}", h.deleteUserWithLanguage)
 
 	router.Handle("POST /users", pipeLine(http.HandlerFunc(h.createUser)))
+	router.Handle("GET /users/{username}", pipeLine(http.HandlerFunc(h.getUser)))
 	router.Handle("/users/{username}/",
 		http.StripPrefix("/users", pipeLine(userRouter)),
 	)
